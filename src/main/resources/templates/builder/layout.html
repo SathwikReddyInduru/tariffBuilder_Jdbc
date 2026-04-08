@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(titleFrag, stageFrag, activeStep)">
+
+<head>
+    <title th:replace="${titleFrag}">Tariff Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/builder.css}">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <img th:src="@{/images/logo.png}" alt="Xius Logo" style="height:50px; vertical-align:middle;">
+        <div class="user-menu">
+            <div class="user-icon" onclick="toggleUserMenu()">
+                <span>👤</span>
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+                <div class="user-name" th:text="${username != null ? username : 'User'}">User</div>
+                <div class="logout-option" onclick="logout()">
+                    <span class="material-icons" style="font-size:18px; margin-right:8px;">logout</span>
+                    Logout
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-container">
+
+        <!-- ═══════════════════════════════════════════════════════════
+             MAIN RAIL — app-level module switcher
+             Nodes: TARIFF BUILDER | TARIFF APPROVER
+             Visibility driven by privilege id (set via JS later)
+        ════════════════════════════════════════════════════════════ -->
+        <nav class="main-rail" id="mainRail">
+
+            <!-- Builder node -->
+            <a href="/builder/step1"
+               class="main-node"
+               id="mn-builder"
+               title="Tariff Builder"
+               onclick="return activateModule('builder', this)">
+                <span class="main-node-icon material-icons">build_circle</span>
+                <span class="main-node-label">BUILDER</span>
+            </a>
+
+            <div class="main-rail-divider"></div>
+
+            <!-- Approver node — hidden until privilege allows -->
+            <a href="/builder/admin"
+               class="main-node"
+               id="mn-approver"
+               title="Tariff Approver"
+               onclick="return activateModule('approver', this)">
+                <span class="main-node-icon material-icons">task_alt</span>
+                <span class="main-node-label">APPROVER</span>
+            </a>
+
+        </nav>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             STEP RAIL — visible only when Builder module is active
+        ════════════════════════════════════════════════════════════ -->
+        <nav class="step-rail" id="stepRail">
+            <a href="/builder/step1" class="step-node" onclick="return checkStepAccess(1)"
+                th:classappend="${activeStep == 1} ? ' active'">
+                <b>1</b><span>PKG TYPE</span>
+            </a>
+            <a href="/builder/step2" class="step-node" onclick="return checkStepAccess(2)"
+                th:classappend="${activeStep == 2} ? ' active'">
+                <b>2</b><span>SERVICE</span>
+            </a>
+            <a href="/builder/step3" class="step-node" onclick="return checkStepAccess(3)"
+                th:classappend="${activeStep == 3} ? ' active'">
+                <b>3</b><span>DATP</span>
+            </a>
+            <a href="/builder/step4" class="step-node" onclick="return checkStepAccess(4)"
+                th:classappend="${activeStep == 4} ? ' active'">
+                <b>4</b><span>AATP</span>
+            </a>
+            <a href="/builder/step5" class="step-node" onclick="return checkStepAccess(5)"
+                th:classappend="${activeStep == 5} ? ' active'">
+                <b>5</b><span>PRICING</span>
+            </a>
+        </nav>
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-tabs">
+                <div class="tab active">LIBRARY</div>
+                <div class="tab">DRAFTS</div>
+            </div>
+            <div class="sidebar-content" id="comp-list"></div>
+        </aside>
+
+        <main class="workspace">
+
+            <!-- HEADER -->
+            <header class="header">
+                <div class="header-inner" style="display:flex; align-items:center;">
+                    <div class="logo">
+                        Builder | <span th:text="${username != null ? username : 'user'}">user</span>
+                    </div>
+                    <input type="text" placeholder="Name..." class="config-name" id="configName">
+                </div>
+            </header>
+
+            <th:block th:replace="${stageFrag}"></th:block>
+
+            <!-- FOOTER ACTIONS -->
+            <div class="config-panel" id="footerActions">
+                <button class="btn-secondary" onclick="viewTree()">Hierarchy</button>
+                <button class="btn-primary" onclick="saveConfiguration()"
+                    th:classappend="${activeStep != 5} ? ' hidden'">SAVE CONFIG</button>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- HIERARCHY MODAL -->
+    <div id="treeModal" onclick="closeTree()">
+        <div class="tree-card" onclick="event.stopPropagation()">
+            <h2>Configuration Summary</h2>
+            <div class="tree-body" id="treeBody">
+                <div class="tree-header">
+                    <h3 id="treeName">Unnamed Package</h3>
+                    <span id="treeMeta">| NORMAL | Retail</span>
+                </div>
+                <div class="tree-row" id="treeMain">📦 Main Service Plan: None</div>
+                <div class="tree-row" id="treeDatp">➕ DATP Components: 0 items</div>
+                <div class="tree-row" id="treeAatp">🛒 AATP Components: 0 items</div>
+                <hr class="tree-divider">
+                <div class="tree-charge" id="treeCharge"><b>Charge: RM 0.00</b> | <b>Ends: Permanent</b></div>
+            </div>
+            <button class="tree-close-btn" onclick="closeTree()">Close Preview</button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2026 XIUS</p>
+    </footer>
+
+    <script th:src="@{/js/layout.js}"></script>
+
+</body>
+
+</html>

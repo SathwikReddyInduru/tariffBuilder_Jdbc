@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{builder/layout :: layout(~{::title}, ~{::section}, 5)}">
+<head>
+    <title>Pricing</title>
+</head>
+<body>
+    <section class="stage">
+        <div class="step-guide">
+            <b>Finalize Pricing</b>
+            Complete the mandatory business fields before saving.
+        </div>
+
+        <div class="form-container">
+            <div class="form-group">
+                <label>PACKAGE CHARGE</label>
+                <input type="number" id="price"
+                       oninput="onPriceChange(this.value)"
+                       placeholder="0.00">
+            </div>
+
+            <div class="form-group">
+                <label>PACKAGE END DATE</label>
+                <input type="date" id="endDate"
+                       onchange="onEndDateChange(this.value)">
+            </div>
+
+            <div class="form-group">
+                <label>PUBLICITY CODE</label>
+                <input type="text" id="publicityCode"
+                       oninput="onPublicityCodeChange(this.value)"
+                       placeholder="Enter code">
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="isCorporate"
+                       onchange="onCorporateChange(this.checked)">
+                <label for="isCorporate">IS CORPORATE PACK</label>
+            </div>
+        </div>
+
+        <script th:src="@{/js/step5.js}"></script>
+    </section>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{builder/layout :: layout(~{::title}, ~{::section}, 1)}">
+<head>
+    <title>Package Type</title>
+</head>
+<body>
+    
+    <section class="stage">
+
+        <div class="step-guide">
+            <b>Choose Base Type</b>
+            Select the foundational billing type.
+            <b>Normal</b> is simple;
+            <b>Commercial</b> allows full recurring billing configuration.
+        </div>
+
+        <h1 class="main-title">Choose Base Type</h1>
+
+        <div id="typeSection" class="type-grid">
+            <div class="type-card" onclick="selectType('PREPAID')">PREPAID</div>
+            <div class="type-card" onclick="selectType('POSTPAID')">POSTPAID</div>
+        </div>
+
+        <div id="subTypeSection" class="type-grid hidden">
+            <div class="type-card" onclick="selectSubType('NORMAL')">NORMAL</div>
+            <div class="type-card" onclick="selectSubType('COMMERCIAL')">COMMERCIAL</div>
+        </div>
+
+        <script th:src="@{/js/step1.js}"></script>
+        
+
+    </section>
+
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{builder/layout :: layout(~{::title}, ~{::section}, 3)}">
+<head>
+    <title>Default ATPs</title>
+</head>
+<body>
+    <section class="stage">
+        <div class="step-guide">
+            <b>Default ATPs (DATP)</b>
+            Drop included components here. Activation fees are hidden.
+        </div>
+
+        <div class="svc-container">
+            <button class="svc-pill" data-svc="VOICE" onclick="toggleSvc('VOICE', this)">VOICE</button>
+            <button class="svc-pill" data-svc="SMS"   onclick="toggleSvc('SMS', this)">SMS</button>
+            <button class="svc-pill" data-svc="DATA"  onclick="toggleSvc('DATA', this)">DATA</button>
+        </div>
+
+        <!-- Drop zone — rendered by step3.js -->
+        <div id="dropArea" class="service-results"></div>
+
+        <script th:src="@{/js/step3.js}"></script>
+    </section>
+</body>
+</html>

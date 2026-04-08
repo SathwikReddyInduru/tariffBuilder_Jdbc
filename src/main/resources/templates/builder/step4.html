@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{builder/layout :: layout(~{::title}, ~{::section}, 4)}">
+<head>
+    <title>Additional ATPs</title>
+</head>
+<body>
+    <section class="stage">
+        <div class="step-guide">
+            <b>Additional ATPs (AATP)</b>
+            Select optional add-ons. You can configure individual activation fees.
+        </div>
+
+        <div class="svc-container">
+            <button class="svc-pill" data-svc="VOICE" onclick="toggleSvc('VOICE', this)">VOICE</button>
+            <button class="svc-pill" data-svc="SMS"   onclick="toggleSvc('SMS', this)">SMS</button>
+            <button class="svc-pill" data-svc="DATA"  onclick="toggleSvc('DATA', this)">DATA</button>
+        </div>
+
+        <!-- Drop zone — rendered by step4.js -->
+        <div id="dropArea" class="service-results"></div>
+
+        <script th:src="@{/js/step4.js}"></script>
+    </section>
+</body>
+</html>

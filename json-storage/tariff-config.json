@@ -1,0 +1,87 @@
+{
+  "TP" : {
+    "tpName" : "TP",
+    "username" : "USER1",
+    "networkId" : 16,
+    "data" : {
+      "networkId" : 16,
+      "username" : "USER1",
+      "packageType" : "PREPAID",
+      "tariffPackCategory" : "COMMERCIAL",
+      "tariffPackageDesc" : "TP",
+      "endDate" : "04/10/2026",
+      "publicityId" : "pub006",
+      "chargeId" : "TP_PR",
+      "isCorporateYn" : "Y",
+      "tariffPlanId" : 1743,
+      "defaultAtps" : [ {
+        "servicePackageId" : 1750,
+        "chargeId" : "TP_PR"
+      } ],
+      "allowedAtps" : [ ]
+    }
+  },
+  "TP001" : {
+    "tpName" : "TP001",
+    "username" : "USER1",
+    "networkId" : 16,
+    "data" : {
+      "username" : "USER1",
+      "packageType" : "PREPAID",
+      "tariffPackCategory" : "NORMAL",
+      "tariffPackageDesc" : "TP001",
+      "endDate" : "04/15/2026",
+      "publicityId" : "pub0004",
+      "chargeId" : "TP001_PR",
+      "isCorporateYn" : "Y",
+      "tariffPlanId" : 1743,
+      "defaultAtps" : [ {
+        "servicePackageId" : 1750,
+        "chargeId" : "TP001_PR"
+      } ],
+      "allowedAtps" : [ ]
+    }
+  },
+  "TP_18" : {
+    "tpName" : "TP_18",
+    "username" : null,
+    "networkId" : 16,
+    "data" : {
+      "username" : "USER1",
+      "packageType" : "PREPAID",
+      "tariffPackCategory" : "NORMAL",
+      "tariffPackageDesc" : "TP_18",
+      "endDate" : "04/17/2026",
+      "publicityId" : "pub0004",
+      "chargeId" : "TP_18_PR",
+      "isCorporateYn" : "Y",
+      "tariffPlanId" : 1743,
+      "defaultAtps" : [ {
+        "servicePackageId" : 1750,
+        "chargeId" : "TP_18_PR"
+      } ],
+      "allowedAtps" : [ ]
+    }
+  },
+  "TP_19" : {
+    "tpName" : "TP_19",
+    "username" : "USER2",
+    "networkId" : 16,
+    "data" : {
+      "username" : "USER1",
+      "packageType" : "PREPAID",
+      "tariffPackCategory" : "NORMAL",
+      "tariffPackageDesc" : "TP_19",
+      "endDate" : "04/16/2026",
+      "publicityId" : "pub0004",
+      "chargeId" : "TP_19_PR",
+      "isCorporateYn" : "Y",
+      "tariffPlanId" : 1743,
+      "defaultAtps" : [ {
+        "servicePackageId" : 1750,
+        "chargeId" : "TP_19_PR"
+      } ],
+      "allowedAtps" : [ ]
+    }
+  }
+}

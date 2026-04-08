@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{builder/layout :: layout(~{::title}, ~{::section}, 2)}">
+
+<head>
+    <title>Service Plan</title>
+</head>
+
+<body>
+    <section class="stage">
+        <div class="step-guide">
+            <b>Base Service Plan</b>
+            Filter by Voice/SMS/Data and select the core service plan.
+        </div>
+
+        <div class="svc-container">
+            <button class="svc-pill" data-svc="VOICE" onclick="toggleSvc('VOICE', this)">VOICE</button>
+            <button class="svc-pill" data-svc="SMS" onclick="toggleSvc('SMS', this)">SMS</button>
+            <button class="svc-pill" data-svc="DATA" onclick="toggleSvc('DATA', this)">DATA</button>
+        </div>
+        
+        <div id="main-area" class="service-results"></div>
+
+
+        <!-- Hidden input to submit selected plan IDs with form -->
+        <input type="hidden" id="selectedPlanIds" name="selectedPlanIds" />
+        <script th:src="@{/js/step2.js}"></script>
+    </section>
+</body>
+</html>
