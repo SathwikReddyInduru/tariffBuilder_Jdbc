@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{builder/layout :: layout(~{::title}, ~{::section}, 0)}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{builder/layout :: layout(~{::title}, ~{::section}, 0)}">
 
 <head>
     <title>Admin</title>
@@ -8,52 +7,40 @@
 
 <body>
 
-<section style="flex:1; width:100%;">
+    <section style="flex: 1; width: 100%;">
 
-    <div class="main-content">
-        <div class="page-wrapper">
+        <div class="main-content">
 
-            <div class="draft-list">
+            <div class="page-wrapper">
 
-                <div class="draft-card"
-                     th:each="t : ${tariff}"
-                     th:id="'card-' + ${t.tariffPackageId}"
-                     th:if="${t.status} == 'P'">
+                <div class="draft-list">
 
-                    <span class="draft-name"
-                          th:text="${t.tariffPackageName}">
-                    </span>
+                    <div class="draft-card" th:each="tpName : ${tariff}">
 
-                    <div class="actions">
-                        <a class="btn btn-hierarchy"
-                           th:href="@{/admin/hierarchy/{id}(id=${t.networkId})}">
-                            View Hierarchy
-                        </a>
+                        <span class="draft-name" th:text="${tpName}"> </span>
 
-                        <button class="btn btn-approve"
-                                th:onclick="'handleAction(' + ${t.tariffPackageId} + ', \'A\')'">
-                            Approve
-                        </button>
+                        <div class="actions">
+                            <button class="btn btn-hierarchy" th:attr="onclick=|loadHierarchy('${tpName}')|">View
+                                Hierarchy</button>
 
-                        <button class="btn btn-reject"
-                                th:onclick="'handleAction(' + ${t.tariffPackageId} + ', \'R\')'">
-                            Reject
-                        </button>
+                            <button class="btn btn-approve">Approve</button>
+
+                            <button class="btn btn-reject">Reject</button>
+                        </div>
+
                     </div>
 
-                </div>
-
-                <div th:if="${#lists.isEmpty(tariff.?[status == 'P'])}"
-                     style="text-align:center; margin-top:20px;">
-                    <p>No pending tariffs</p>
+                    <div th:if="${#lists.isEmpty(tariff)}">
+                        <p>No Tariff Packages available</p>
+                    </div>
                 </div>
 
             </div>
 
         </div>
-    </div>
 
-</section>
+    </section>
 
 </body>
+
 </html>

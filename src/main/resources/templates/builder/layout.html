@@ -6,6 +6,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/jpeg" href="/images/favicon.jpeg">
     <link rel="stylesheet" th:href="@{/css/builder.css}">
 </head>
 
@@ -37,11 +38,8 @@
         <nav class="main-rail" id="mainRail">
 
             <!-- Builder node -->
-            <a href="/builder/step1"
-               class="main-node"
-               id="mn-builder"
-               title="Tariff Builder"
-               onclick="return activateModule('builder', this)">
+            <a href="/builder/step1" class="main-node" id="mn-builder" title="Tariff Builder"
+                onclick="return activateModule('builder', this)">
                 <span class="main-node-icon material-icons">build_circle</span>
                 <span class="main-node-label">BUILDER</span>
             </a>
@@ -49,11 +47,8 @@
             <div class="main-rail-divider"></div>
 
             <!-- Approver node — hidden until privilege allows -->
-            <a href="/builder/admin"
-               class="main-node"
-               id="mn-approver"
-               title="Tariff Approver"
-               onclick="return activateModule('approver', this)">
+            <a href="/builder/admin" class="main-node" id="mn-approver" title="Tariff Approver"
+                onclick="return activateModule('approver', this)">
                 <span class="main-node-icon material-icons">task_alt</span>
                 <span class="main-node-label">APPROVER</span>
             </a>
@@ -142,6 +137,11 @@
         <p>© 2026 XIUS</p>
     </footer>
 
+    <script th:inline="javascript">
+        const PRIVILEGE_IDS = /*[[${privilegeIds}]]*/[];
+        const PRIVILEGES = /*[[${privileges}]]*/[];
+        const USERNAME = /*[[${username}]]*/ 'User';
+    </script>
     <script th:src="@{/js/layout.js}"></script>
 
 </body>

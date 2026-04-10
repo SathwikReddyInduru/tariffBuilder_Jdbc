@@ -1,87 +1,162 @@
 {
-  "TP" : {
-    "tpName" : "TP",
-    "username" : "USER1",
-    "networkId" : 16,
-    "data" : {
-      "networkId" : 16,
-      "username" : "USER1",
-      "packageType" : "PREPAID",
-      "tariffPackCategory" : "COMMERCIAL",
-      "tariffPackageDesc" : "TP",
-      "endDate" : "04/10/2026",
-      "publicityId" : "pub006",
-      "chargeId" : "TP_PR",
-      "isCorporateYn" : "Y",
-      "tariffPlanId" : 1743,
-      "defaultAtps" : [ {
-        "servicePackageId" : 1750,
-        "chargeId" : "TP_PR"
-      } ],
-      "allowedAtps" : [ ]
-    }
-  },
-  "TP001" : {
-    "tpName" : "TP001",
+  "sathwik" : {
+    "tpName" : "sathwik",
     "username" : "USER1",
     "networkId" : 16,
     "data" : {
       "username" : "USER1",
       "packageType" : "PREPAID",
       "tariffPackCategory" : "NORMAL",
-      "tariffPackageDesc" : "TP001",
-      "endDate" : "04/15/2026",
-      "publicityId" : "pub0004",
-      "chargeId" : "TP001_PR",
-      "isCorporateYn" : "Y",
-      "tariffPlanId" : 1743,
-      "defaultAtps" : [ {
-        "servicePackageId" : 1750,
-        "chargeId" : "TP001_PR"
-      } ],
-      "allowedAtps" : [ ]
-    }
-  },
-  "TP_18" : {
-    "tpName" : "TP_18",
-    "username" : null,
-    "networkId" : 16,
-    "data" : {
-      "username" : "USER1",
-      "packageType" : "PREPAID",
-      "tariffPackCategory" : "NORMAL",
-      "tariffPackageDesc" : "TP_18",
+      "tariffPackageDesc" : "sathwik",
+      "charge" : "1000",
       "endDate" : "04/17/2026",
-      "publicityId" : "pub0004",
-      "chargeId" : "TP_18_PR",
+      "publicityId" : "pub00000111",
+      "chargeId" : "sathwik_PR",
       "isCorporateYn" : "Y",
       "tariffPlanId" : 1743,
+      "tariffPlanName" : "MI MUNDO S_V",
       "defaultAtps" : [ {
         "servicePackageId" : 1750,
-        "chargeId" : "TP_18_PR"
+        "chargeId" : "sathwik_PR",
+        "packageName" : "MI MUNDO M_VO",
+        "validity" : "Monthly",
+        "midnightExpiry" : "Y",
+        "renewal" : "Y",
+        "rental" : "0",
+        "maxCount" : "0",
+        "freeCycles" : "0"
       } ],
-      "allowedAtps" : [ ]
+      "additionalAtps" : [ {
+        "servicePackageId" : 1765,
+        "chargeId" : "sathwik_PR",
+        "packageName" : "DYNAMIC_DATP",
+        "validity" : "Monthly",
+        "midnightExpiry" : "Y",
+        "renewal" : "Y",
+        "rental" : "0",
+        "maxCount" : "0",
+        "freeCycles" : "0"
+      } ]
     }
   },
-  "TP_19" : {
-    "tpName" : "TP_19",
-    "username" : "USER2",
+  "murali" : {
+    "tpName" : "murali",
+    "username" : "USER1",
     "networkId" : 16,
     "data" : {
       "username" : "USER1",
       "packageType" : "PREPAID",
       "tariffPackCategory" : "NORMAL",
-      "tariffPackageDesc" : "TP_19",
-      "endDate" : "04/16/2026",
-      "publicityId" : "pub0004",
-      "chargeId" : "TP_19_PR",
+      "tariffPackageDesc" : "murali",
+      "charge" : "299",
+      "endDate" : "04/10/2026",
+      "publicityId" : "pub000002",
+      "chargeId" : "murali_PR",
       "isCorporateYn" : "Y",
       "tariffPlanId" : 1743,
+      "tariffPlanName" : "MI MUNDO S_V",
       "defaultAtps" : [ {
         "servicePackageId" : 1750,
-        "chargeId" : "TP_19_PR"
+        "chargeId" : "murali_PR",
+        "packageName" : "MI MUNDO M_VO",
+        "validity" : "Monthly",
+        "midnightExpiry" : "Y",
+        "renewal" : "Y",
+        "rental" : "0",
+        "maxCount" : "0",
+        "freeCycles" : "0"
       } ],
-      "allowedAtps" : [ ]
+      "additionalAtps" : [ {
+        "servicePackageId" : 1765,
+        "chargeId" : "murali_PR",
+        "packageName" : "DYNAMIC_DATP",
+        "validity" : "Monthly",
+        "midnightExpiry" : "Y",
+        "renewal" : "Y",
+        "rental" : "0",
+        "maxCount" : "0",
+        "freeCycles" : "0"
+      } ]
+    }
+  },
+  "harsha" : {
+    "tpName" : "harsha",
+    "username" : "USER1",
+    "networkId" : 16,
+    "data" : {
+      "username" : "USER1",
+      "packageType" : "PREPAID",
+      "tariffPackCategory" : "NORMAL",
+      "tariffPackageDesc" : "harsha",
+      "charge" : "0",
+      "endDate" : "04/17/2026",
+      "publicityId" : "pub2",
+      "chargeId" : "harsha_PR",
+      "isCorporateYn" : "Y",
+      "tariffPlanId" : 1743,
+      "tariffPlanName" : "MI MUNDO S_V",
+      "defaultAtps" : [ {
+        "servicePackageId" : 1750,
+        "chargeId" : "harsha_PR",
+        "packageName" : "MI MUNDO M_VO",
+        "validity" : "Monthly",
+        "midnightExpiry" : "Y",
+        "renewal" : "Y",
+        "rental" : "",
+        "maxCount" : "",
+        "freeCycles" : "0"
+      } ],
+      "additionalAtps" : [ {
+        "servicePackageId" : 1742,
+        "chargeId" : "harsha_PR",
+        "packageName" : "MI MUNDO S_SMS",
+        "validity" : "Monthly",
+        "midnightExpiry" : "Y",
+        "renewal" : "Y",
+        "rental" : "",
+        "maxCount" : "",
+        "freeCycles" : "0"
+      } ]
+    }
+  },
+  "yhuky" : {
+    "tpName" : "yhuky",
+    "username" : "USER1",
+    "networkId" : 16,
+    "data" : {
+      "username" : "USER1",
+      "packageType" : "PREPAID",
+      "tariffPackCategory" : "NORMAL",
+      "tariffPackageDesc" : "yhuky",
+      "charge" : "67876",
+      "endDate" : "04/17/2026",
+      "publicityId" : "yku",
+      "chargeId" : "yhuky_PR",
+      "isCorporateYn" : "Y",
+      "tariffPlanId" : 1743,
+      "tariffPlanName" : "MI MUNDO S_V",
+      "defaultAtps" : [ {
+        "servicePackageId" : 1750,
+        "chargeId" : "yhuky_PR",
+        "packageName" : "MI MUNDO M_VO",
+        "validity" : "Monthly",
+        "midnightExpiry" : "Y",
+        "renewal" : "Y",
+        "rental" : "",
+        "maxCount" : "",
+        "freeCycles" : "0"
+      } ],
+      "additionalAtps" : [ {
+        "servicePackageId" : 1742,
+        "chargeId" : "yhuky_PR",
+        "packageName" : "MI MUNDO S_SMS",
+        "validity" : "Monthly",
+        "midnightExpiry" : "Y",
+        "renewal" : "Y",
+        "rental" : "",
+        "maxCount" : "",
+        "freeCycles" : "0"
+      } ]
     }
   }
 }

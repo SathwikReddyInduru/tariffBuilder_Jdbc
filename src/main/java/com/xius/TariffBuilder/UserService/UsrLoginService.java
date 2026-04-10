@@ -15,10 +15,9 @@ import com.xius.TariffBuilder.Dto.UsrPrivilegeDTO;
 
 @Service
 public class UsrLoginService {
-      
+
 	private static final Logger logger = LoggerFactory.getLogger(UsrLoginService.class);
 
-	
 	@Autowired
 	private UserAuthRepository repository;
 
@@ -26,8 +25,8 @@ public class UsrLoginService {
 
 		UsrLoginResponse response = new UsrLoginResponse();
 		Long networkId = repository.getNetworkId(request.getNetworkLoginName());
-	String status = repository.getNetworkStatus(networkId);
- 
+		String status = repository.getNetworkStatus(networkId);
+
 		if (!"AC".equals(status)) {
 			throw new RuntimeException("Inactive network");
 		}
@@ -52,20 +51,21 @@ public class UsrLoginService {
 
 		List<UsrModuleDTO> modules = repository.getModules(request.getLoginId(), networkId);
 
-		//UsrConfigDTO config = repository.getSystemConfig(networkId);
+		// UsrConfigDTO config = repository.getSystemConfig(networkId);
 
-	//repository.insertLoginHistory(request.getLoginId(), request.getNetworkLoginName());
-        // for chief all privileges should display
-  
+		// repository.insertLoginHistory(request.getLoginId(),
+		// request.getNetworkLoginName());
+		// for chief all privileges should display
+
 		if ("chief".equalsIgnoreCase(request.getLoginId())) {
 
 			privileges = repository.getAllPrivileges();
-		    modules = repository.getAllModules();
+			modules = repository.getAllModules();
 
 		} else {
 
 			privileges = repository.getPrivileges(request.getLoginId(), networkId);
-		    modules = repository.getModules(request.getLoginId(), networkId);
+			modules = repository.getModules(request.getLoginId(), networkId);
 		}
 		response.setStatus("SUCCESS");
 		response.setMessage("Login Successful");
@@ -76,10 +76,6 @@ public class UsrLoginService {
 		response.setPrivileges(privileges);
 		response.setModules(modules);
 		response.setLoginId(request.getLoginId());
-		//response.setCurrency(config.getCurrency());
-		//response.setVoucherTopupAllowed(config.getVoucherTopup());
 		return response;
 	}
 }
-
-

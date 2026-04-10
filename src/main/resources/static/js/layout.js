@@ -10,15 +10,23 @@
 //  Replace the constant below (or fetch it from session/API)
 //  once the privilege endpoint is ready.
 // ═══════════════════════════════════════════════════════
+function applyPrivilege() {
 
-const PRIVILEGE_ID = parseInt(sessionStorage.getItem('privilegeId') || '3', 10);
+    const builderNode = document.getElementById('mn-builder');
+    const approverNode = document.getElementById('mn-approver');
 
-// Maps privilege id → which main-rail nodes are visible
-const PRIVILEGE_MAP = {
-    1: ['builder'],
-    2: ['approver'],
-    3: ['builder', 'approver'],
-};
+    const hasBuilder = PRIVILEGE_IDS.includes("P26125");
+    const hasApprover = PRIVILEGE_IDS.includes("P26126");
+
+    // Hide nodes individually
+    if (!hasBuilder && builderNode) {
+        builderNode.style.display = "none";
+    }
+
+    if (!hasApprover && approverNode) {
+        approverNode.style.display = "none";
+    }
+}
 
 // ── Apply privilege on load ──
 window.addEventListener('DOMContentLoaded', () => {
@@ -28,48 +36,45 @@ window.addEventListener('DOMContentLoaded', () => {
     restoreConfigName();
 });
 
-function applyPrivilege() {
-
-    const allowed = PRIVILEGE_MAP[PRIVILEGE_ID] || ['builder'];
-
-    const builderNode = document.getElementById('mn-builder');
-    const approverNode = document.getElementById('mn-approver');
-
-    if (!allowed.includes('builder') && builderNode) builderNode.classList.add('hidden-node');
-    if (!allowed.includes('approver') && approverNode) approverNode.classList.add('hidden-node');
-
-    // If only one module is allowed, auto-select it and hide main rail
-    // (single-privilege users see no wasted chrome)
-    if (allowed.length === 1) {
-        document.getElementById('mainRail').style.width = '0';
-        document.getElementById('mainRail').style.overflow = 'hidden';
-        document.getElementById('mainRail').style.padding = '0';
-    }
-}
-
 // ── Restore active module based on current URL ──
 function restoreActiveModule() {
 
+    const hasBuilder = PRIVILEGE_IDS.includes("P26125");
+    const hasApprover = PRIVILEGE_IDS.includes("P26126");
+
     const path = window.location.pathname;
 
+    // If already in admin
     if (path.startsWith('/builder/admin')) {
         setModuleUI('approver');
-    } else {
+        return;
+    }
+
+    // If already in builder
+    if (path.startsWith('/builder/step')) {
         setModuleUI('builder');
+        return;
+    }
+
+    // 🔥 FIRST LOAD DECISION
+    if (!hasBuilder && hasApprover) {
+        window.location.href = "/builder/admin";
+    }
+    else if (hasBuilder) {
+        window.location.href = "/builder/step1";
     }
 }
 
 // ── Activate module (called from main-rail anchor click) ──
 function activateModule(module, el) {
 
-    const allowed = PRIVILEGE_MAP[PRIVILEGE_ID] || ['builder'];
-    if (!allowed.includes(module)) {
-        return false; // block navigation if not privileged
-    }
+    const hasBuilder = PRIVILEGE_IDS.includes("P26125");
+    const hasApprover = PRIVILEGE_IDS.includes("P26126");
+
+    if (module === 'builder' && !hasBuilder) return false;
+    if (module === 'approver' && !hasApprover) return false;
 
     setModuleUI(module);
-
-    // Allow the anchor's href to fire
     return true;
 }
 
@@ -79,6 +84,7 @@ function setModuleUI(module) {
     const sidebar = document.getElementById('sidebar');
     const builderNode = document.getElementById('mn-builder');
     const approverNode = document.getElementById('mn-approver');
+    const configInput = document.getElementById('configName');
 
     // ── Active node highlight ──
     if (builderNode) builderNode.classList.toggle('active', module === 'builder');
@@ -89,22 +95,14 @@ function setModuleUI(module) {
         if (stepRail) stepRail.classList.remove('collapsed');
         if (sidebar) sidebar.classList.remove('collapsed');
         if (footerActions) footerActions.style.display = 'flex';
+        if (configInput) configInput.style.display = 'block';
     } else {
         // Approver — collapse step rail + sidebar (they're irrelevant)
         if (stepRail) stepRail.classList.add('collapsed');
         if (sidebar) sidebar.classList.add('collapsed');
         if (footerActions) footerActions.style.display = 'none';
+        if (configInput) configInput.style.display = 'none';
     }
-}
-
-// ═══════════════════════════════════════════════════════
-//  PRIVILEGE SETTER  (call this from your auth callback)
-//  e.g.  setPrivilege(1)  after login API returns priv id
-// ═══════════════════════════════════════════════════════
-function setPrivilege(id) {
-    sessionStorage.setItem('privilegeId', String(id));
-    // reload so applyPrivilege() runs fresh
-    window.location.reload();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -207,9 +205,7 @@ async function saveConfiguration() {
         return;
     }
 
-
     const chargeId = configName + "_PR";
-
 
     function formatDateToMMDDYYYY(dateStr) {
 
@@ -221,10 +217,9 @@ async function saveConfiguration() {
         return `${month}/${day}/${year}`;
     }
 
-
     const payload = {
 
-        username: "USER1",   // keep only username in request
+        username: USERNAME,
 
         packageType:
             sessionStorage.getItem("pkgType"),
@@ -235,6 +230,9 @@ async function saveConfiguration() {
 
         tariffPackageDesc:
             configName,
+
+        charge:
+            state.price || "0.00",
 
         endDate:
             formatDateToMMDDYYYY(state.endDate),
@@ -252,6 +250,9 @@ async function saveConfiguration() {
         tariffPlanId:
             Number(state.s2[0].id),
 
+        tariffPlanName:
+            state.s2[0].name,
+
         defaultAtps:
             state.s3.map(item => ({
 
@@ -259,23 +260,63 @@ async function saveConfiguration() {
                     Number(item.id),
 
                 chargeId:
-                    chargeId
+                    chargeId,
+
+                packageName:
+                    item.name,
+
+                validity:
+                    item.validity || "MONTHLY",
+
+                midnightExpiry:
+                    item.midnightExpiry ? "Y" : "N",
+
+                renewal:
+                    item.renewal ? "Y" : "N",
+
+                rental:
+                    item.rental,
+
+                maxCount:
+                    item.maxCount,
+
+                freeCycles:
+                    item.freeCycles || 0
             })),
 
-        allowedAtps:
+        additionalAtps:
             state.s4.map(item => ({
 
                 servicePackageId:
                     Number(item.id),
 
                 chargeId:
-                    chargeId
+                    chargeId,
+
+                packageName:
+                    item.name,
+
+                validity:
+                    item.validity || "MONTHLY",
+
+                midnightExpiry:
+                    item.midnightExpiry ? "Y" : "N",
+
+                renewal:
+                    item.renewal ? "Y" : "N",
+
+                rental:
+                    item.rental,
+
+                maxCount:
+                    item.maxCount,
+
+                freeCycles:
+                    item.freeCycles || 0
             }))
     };
 
-
     console.log("REQUEST", payload);
-
 
     try {
 
@@ -291,34 +332,23 @@ async function saveConfiguration() {
                 body: JSON.stringify(payload)
             });
 
-
         const result = await response.json();
-
-
         console.log("RESPONSE", result);
-
 
         if (!response.ok || result.error) {
 
             alert(result.error || "Validation failed");
-
             return;
         }
-
-
         alert("Configuration Prepared (JSON stored)");
 
         clearBuilderSession();
 
         window.location.href =
             "/builder/step1";
-
     }
-
     catch (error) {
-
         console.error(error);
-
         alert("Server error");
     }
 }
@@ -371,23 +401,136 @@ function logout() {
 // ═══════════════════════════════════════════════════════
 //  ADMIN ACTIONS (Approve/Reject) in Approver Module
 // ═══════════════════════════════════════════════════════
-function handleAction(tariffPackageId, status) {
-    const message = status === 'A' ? 'Approved' : 'Rejected';
+// function handleAction(tariffPackageId, status) {
+//     const message = status === 'A' ? 'Approved' : 'Rejected';
 
-    fetch('/admin/updateStatus', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            tariffPackageId: tariffPackageId,
-            status: status
-        })
-    })
-        .then(res => {
-            if (res.ok) {
-                alert(message);
-                document.getElementById('card-' + tariffPackageId).remove();
-            } else {
-                alert('Error!');
+//     fetch('/admin/updateStatus', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({
+//             tariffPackageId: tariffPackageId,
+//             status: status
+//         })
+//     })
+//         .then(res => {
+//             if (res.ok) {
+//                 alert(message);
+//                 document.getElementById('card-' + tariffPackageId).remove();
+//             } else {
+//                 alert('Error!');
+//             }
+//         });
+// }
+
+function loadHierarchy(tpName) {
+
+    fetch('/admin/hierarchy/' + tpName)
+        .then(res => res.json())
+        .then(tp => {
+
+            if (!tp) {
+                alert("No data found");
+                return;
             }
+
+            const data = tp.data || {};
+
+            // ───────── HEADER ─────────
+            document.getElementById('treeName').textContent =
+                data.tariffPackageDesc || tpName;
+
+            const type = data.packageType || "N/A";
+            const category = data.tariffPackCategory || "NORMAL";
+            const corp = data.isCorporateYn === "Y" ? "Corporate" : "Retail";
+
+            document.getElementById('treeMeta').textContent =
+                `${type} | ${category} | ${corp}`;
+
+            // ───────── MAIN PLAN ─────────
+            document.getElementById('treeMain').innerHTML =
+                data.tariffPlanId
+                    ? `
+                    <b>📦 Main Plan</b>
+                    <div class="plan-box">
+                        <div class="plan-title">
+                            ${data.tariffPlanName}
+                        </div>
+                    </div>
+                    `
+                    : "📦 Main Plan: Not Selected";
+
+            // ───────── DATP ─────────
+            const datp = data.defaultAtps || [];
+
+            document.getElementById('treeDatp').innerHTML =
+                datp.length
+                    ? `
+                    <b>➕ DATP</b>
+                    ${datp.map(d => `
+                        <div class="plan-box">
+                            <div class="plan-title">
+                                ${d.packageName}
+                            </div>
+                            <div class="plan-meta">
+                                Validity: ${d.validity || '-'} |
+                                Renewal: ${d.renewal === 'Y' ? 'Yes' : 'No'} |
+                                Rental: ${d.rental || '0'}
+                            </div>
+                        </div>
+                    `).join("")}
+                    `
+                    : "➕ DATP: No plan selected";
+
+            // ───────── AATP ─────────
+            const aatp = data.additionalAtps || [];
+
+            document.getElementById('treeAatp').innerHTML =
+                aatp.length
+                    ? `
+                    <b>🛒 AATP</b>
+                    ${aatp.map(a => `
+                        <div class="plan-box">
+                            <div class="plan-title">
+                                ${a.packageName}
+                            </div>
+                            <div class="plan-meta">
+                                Validity: ${a.validity || '-'} |
+                                Renewal: ${a.renewal === 'Y' ? 'Yes' : 'No'} |
+                                Rental: ${a.rental || '0'}
+                            </div>
+                        </div>
+                    `).join("")}
+                    `
+                    : "🛒 AATP: No plan selected";
+
+            // ───────── FOOTER ─────────
+            document.getElementById('treeCharge').innerHTML =
+                `<b>Charge:</b> ${data.charge || 'N/A'} 
+                 | <b>Ends:</b> ${data.endDate || 'Permanent'}`;
+
+            // ───────── OPEN MODAL ─────────
+            document.getElementById('treeModal').classList.add('open');
+
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error loading hierarchy");
         });
 }
+
+
+// CLOSE MODAL
+function closeTree() {
+    document.getElementById('treeModal').classList.remove('open');
+}
+
+// CLOSE ON OUTSIDE CLICK
+// document.addEventListener('DOMContentLoaded', () => {
+//     const modal = document.getElementById('treeModal');
+
+//     modal.addEventListener('click', function (e) {
+//         if (e.target.id === 'treeModal') {
+//             closeTree();
+//         }
+//     });
+// });
