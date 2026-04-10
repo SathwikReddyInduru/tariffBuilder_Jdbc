@@ -7,40 +7,77 @@
 
 <body>
 
-    <section style="flex: 1; width: 100%;">
+    <section style="flex: 1; width: 100%; height: 100%; padding: 24px; box-sizing: border-box; overflow: hidden;">
 
-        <div class="main-content">
+        <div class="admin-container">
 
-            <div class="page-wrapper">
+            <!-- LEFT PANE: Pending Approvals -->
+            <div class="left-pane">
+                <div class="pane-header">
+                    <h3>Pending Approvals</h3>
+                    <p class="count" th:if="${not #lists.isEmpty(tariff)}" th:text="${#lists.size(tariff)} + ' package(s)'">
+                    </p>
+                </div>
 
-                <div class="draft-list">
-
-                    <div class="draft-card" th:each="tpName : ${tariff}">
-
-                        <span class="draft-name" th:text="${tpName}"> </span>
-
-                        <div class="actions">
-                            <button class="btn btn-hierarchy" th:attr="onclick=|loadHierarchy('${tpName}')|">View
-                                Hierarchy</button>
-
-                            <button class="btn btn-approve">Approve</button>
-
-                            <button class="btn btn-reject">Reject</button>
+                <div class="approval-list" th:if="${not #lists.isEmpty(tariff)}">
+                    <div class="approval-card"
+                         th:each="tpName : ${tariff}"
+                         th:attr="data-tpname=${tpName}"
+                         onclick="selectPackage(this)">
+                        <div class="card-content">
+                            <span class="package-name" th:text="${tpName}"></span>
                         </div>
-
-                    </div>
-
-                    <div th:if="${#lists.isEmpty(tariff)}">
-                        <p>No Tariff Packages available</p>
+                        <div class="actions">
+                            <button class="btn btn-approve"
+                                    th:attr="onclick=|approvePackage('${tpName}', this)|"
+                                    onclick="event.stopImmediatePropagation()">Approve</button>
+                            <button class="btn btn-reject"
+                                    th:attr="onclick=|rejectPackage('${tpName}', this)|"
+                                    onclick="event.stopImmediatePropagation()">Reject</button>
+                        </div>
                     </div>
                 </div>
 
+                <div th:if="${#lists.isEmpty(tariff)}" class="empty-state">
+                    <p>No Tariff Packages pending approval</p>
+                </div>
             </div>
 
-        </div>
+            <!-- RIGHT PANE: Hierarchy Viewer -->
+            <div class="right-pane">
+                <div id="no-selection" class="placeholder">
+                    <span class="material-icons">fact_check</span>
+                    <h3>Select a package</h3>
+                    <p>Click any package to view its full hierarchy here</p>
+                </div>
 
+                <!-- Hierarchy content (hidden by default) -->
+                <div id="hierarchy-view" class="hierarchy-view hidden">
+                    <div class="package-header">
+                        <h2 id="h-name"></h2>
+                        <div id="h-meta" class="meta-pills"></div>
+                    </div>
+
+                    <div class="section">
+                        <h4>📦 MAIN SERVICE PLAN</h4>
+                        <div id="h-main" class="plan-box"></div>
+                    </div>
+
+                    <div class="section">
+                        <h4 id="h-datp-header">🛒 DATP - 0 COMPONENTS</h4>
+                        <div id="h-datp" class="components-list"></div>
+                    </div>
+
+                    <div class="section">
+                        <h4 id="h-aatp-header">➕ AATP - 0 COMPONENTS</h4>
+                        <div id="h-aatp" class="components-list"></div>
+                    </div>
+
+                    <div id="h-footer-bar" class="footer-bar"></div>
+                </div>
+            </div>
+        </div>
     </section>
 
 </body>
-
 </html>

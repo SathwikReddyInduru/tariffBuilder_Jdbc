@@ -1,15 +1,3 @@
-// ═══════════════════════════════════════════════════════
-//  PRIVILEGE-BASED MODULE VISIBILITY
-//
-//  Privilege IDs (to be set when auth API is wired up):
-//    1  →  BUILDER only
-//    2  →  APPROVER only
-//    3  →  BUILDER + APPROVER
-//
-//  Currently defaults to showing both nodes for dev/demo.
-//  Replace the constant below (or fetch it from session/API)
-//  once the privilege endpoint is ready.
-// ═══════════════════════════════════════════════════════
 function applyPrivilege() {
 
     const builderNode = document.getElementById('mn-builder');
@@ -245,7 +233,7 @@ async function saveConfiguration() {
             chargeId,
 
         isCorporateYn:
-            state.isCorporate ? "Y" : "N",
+            state.isCorporate,
 
         tariffPlanId:
             Number(state.s2[0].id),
@@ -266,19 +254,19 @@ async function saveConfiguration() {
                     item.name,
 
                 validity:
-                    item.validity || "MONTHLY",
+                    item.validity,
 
                 midnightExpiry:
-                    item.midnightExpiry ? "Y" : "N",
+                    item.midnightExpiry,
 
                 renewal:
-                    item.renewal ? "Y" : "N",
+                    item.renewal,
 
                 rental:
-                    item.rental,
+                    item.rental || 0,
 
                 maxCount:
-                    item.maxCount,
+                    item.maxCount || 0,
 
                 freeCycles:
                     item.freeCycles || 0
@@ -297,19 +285,19 @@ async function saveConfiguration() {
                     item.name,
 
                 validity:
-                    item.validity || "MONTHLY",
+                    item.validity,
 
                 midnightExpiry:
-                    item.midnightExpiry ? "Y" : "N",
+                    item.midnightExpiry,
 
                 renewal:
-                    item.renewal ? "Y" : "N",
+                    item.renewal,
 
                 rental:
-                    item.rental,
+                    item.rental || 0,
 
                 maxCount:
-                    item.maxCount,
+                    item.maxCount || 0,
 
                 freeCycles:
                     item.freeCycles || 0
@@ -422,115 +410,278 @@ function logout() {
 //         });
 // }
 
+// function loadHierarchy(tpName) {
+
+//     fetch('/admin/hierarchy/' + tpName)
+//         .then(res => res.json())
+//         .then(tp => {
+
+//             if (!tp) {
+//                 alert("No data found");
+//                 return;
+//             }
+
+//             const data = tp.data || {};
+
+//             // ───────── HEADER ─────────
+//             document.getElementById('treeName').textContent =
+//                 data.tariffPackageDesc || tpName;
+
+//             const type = data.packageType || "N/A";
+//             const category = data.tariffPackCategory || "NORMAL";
+//             const corp = data.isCorporateYn === "Y" ? "Corporate" : "Retail";
+
+//             document.getElementById('treeMeta').textContent =
+//                 `${type} | ${category} | ${corp}`;
+
+//             // ───────── MAIN PLAN ─────────
+//             document.getElementById('treeMain').innerHTML =
+//                 data.tariffPlanId
+//                     ? `
+//                     <b>📦 Main Plan</b>
+//                     <div class="plan-box">
+//                         <div class="plan-title">
+//                             ${data.tariffPlanName}
+//                         </div>
+//                     </div>
+//                     `
+//                     : "📦 Main Plan: Not Selected";
+
+//             // ───────── DATP ─────────
+//             const datp = data.defaultAtps || [];
+
+//             document.getElementById('treeDatp').innerHTML =
+//                 datp.length
+//                     ? `
+//                     <b>➕ DATP</b>
+//                     ${datp.map((d, i) => `
+//                         <div class="plan-box">
+
+//                             <div class="plan-header" onclick="togglePlan(this)">
+//                                 <span>${d.packageName}</span>
+//                                 <span class="arrow">▼</span>
+//                             </div>
+
+//                             <div class="plan-content">
+//                                 <div class="plan-meta">
+//                                     <span class="meta-pill">ID: ${d.servicePackageId}</span>
+//                                     <span class="meta-pill">Validity: ${d.validity || '-'}</span>
+//                                     <span class="meta-pill">Renewal: ${d.renewal === 'Y' ? 'Yes' : 'No'}</span>
+//                                     <span class="meta-pill">Expiry: ${d.midnightExpiry === 'Y' ? 'Midnight' : 'Normal'}</span>
+//                                     <span class="meta-pill">Rental: ${d.rental || '0'}</span>
+//                                     <span class="meta-pill">Max Count: ${d.maxCount || '0'}</span>
+//                                     <span class="meta-pill">Free Cycles: ${d.freeCycles || '0'}</span>
+//                                 </div>
+//                             </div>
+//                         </div>
+//                     `).join("")}
+//                     `
+//                     : "➕ DATP: No plan selected";
+
+//             // ───────── AATP ─────────
+//             const aatp = data.additionalAtps || [];
+
+//             document.getElementById('treeAatp').innerHTML =
+//                 aatp.length
+//                     ? `
+//                     <b>🛒 AATP</b>
+//                     ${aatp.map(a => `
+//                         <div class="plan-box">
+
+//                             <div class="plan-header" onclick="togglePlan(this)">
+//                                 <span>${a.packageName}</span>
+//                                 <span class="arrow">▼</span>
+//                             </div>
+
+//                             <div class="plan-content">
+//                                 <div class="plan-meta">
+//                                     <span class="meta-pill">ID: ${a.servicePackageId}</span>
+//                                     <span class="meta-pill">Validity: ${a.validity || '-'}</span>
+//                                     <span class="meta-pill">Renewal: ${a.renewal === 'Y' ? 'Yes' : 'No'}</span>
+//                                     <span class="meta-pill">Expiry: ${a.midnightExpiry === 'Y' ? 'Midnight' : 'Normal'}</span>
+//                                     <span class="meta-pill">Rental: ${a.rental || '0'}</span>
+//                                     <span class="meta-pill">Max Count: ${a.maxCount || '0'}</span>
+//                                     <span class="meta-pill">Free Cycles: ${a.freeCycles || '0'}</span>
+//                                 </div>
+//                             </div>
+//                         </div>
+//                     `).join("")}
+//                     `
+//                     : "🛒 AATP: No plan selected";
+
+//             // ───────── FOOTER ─────────
+//             document.getElementById('treeCharge').innerHTML =
+//                 `<b>Charge:</b> ${data.charge || 'N/A'}
+//                  | <b>Ends:</b> ${data.endDate || 'Permanent'}`;
+
+//             // ───────── OPEN MODAL ─────────
+//             document.getElementById('treeModal').classList.add('open');
+
+//         })
+//         .catch(err => {
+//             console.error(err);
+//             alert("Error loading hierarchy");
+//         });
+// }
+
+// function togglePlan(header) {
+//     const content = header.nextElementSibling;
+//     const arrow = header.querySelector('.arrow');
+
+//     content.classList.toggle('open');
+//     arrow.classList.toggle('rotate');
+// }
+
+// CLOSE MODAL
+// function closeTree() {
+//     document.getElementById('treeModal').classList.remove('open');
+// }
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN — TWO-PANE APPROVER UI (with working arrows)
+// ═══════════════════════════════════════════════════════
+
+function selectPackage(cardElement) {
+    document.querySelectorAll('.approval-card').forEach(c => c.classList.remove('selected'));
+    cardElement.classList.add('selected');
+
+    const tpName = cardElement.dataset.tpname;
+    loadHierarchy(tpName);
+}
+
 function loadHierarchy(tpName) {
 
     fetch('/admin/hierarchy/' + tpName)
         .then(res => res.json())
         .then(tp => {
-
-            if (!tp) {
-                alert("No data found");
+            if (!tp || !tp.data) {
+                alert("No hierarchy data found");
                 return;
             }
 
             const data = tp.data || {};
 
-            // ───────── HEADER ─────────
-            document.getElementById('treeName').textContent =
-                data.tariffPackageDesc || tpName;
+            // Switch views
+            document.getElementById('no-selection').classList.add('hidden');
+            const view = document.getElementById('hierarchy-view');
+            view.classList.remove('hidden');
 
-            const type = data.packageType || "N/A";
-            const category = data.tariffPackCategory || "NORMAL";
-            const corp = data.isCorporateYn === "Y" ? "Corporate" : "Retail";
+            // Header
+            document.getElementById('h-name').textContent = data.tariffPackageDesc || tpName;
 
-            document.getElementById('treeMeta').textContent =
-                `${type} | ${category} | ${corp}`;
+            const metaHTML = `
+                <span class="meta-pill">${data.packageType}</span>
+                <span class="meta-pill">${data.tariffPackCategory || 'NORMAL'}</span>
+                <span class="meta-pill">${data.isCorporateYn ? 'Corporate' : 'Retail'}</span>
+            `;
+            document.getElementById('h-meta').innerHTML = metaHTML;
 
-            // ───────── MAIN PLAN ─────────
-            document.getElementById('treeMain').innerHTML =
-                data.tariffPlanId
-                    ? `
-                    <b>📦 Main Plan</b>
-                    <div class="plan-box">
-                        <div class="plan-title">
-                            ${data.tariffPlanName}
+            // Main Plan
+            document.getElementById('h-main').innerHTML = data.tariffPlanName
+                ? `<strong>${data.tariffPlanName}</strong>`
+                : 'No main plan selected';
+
+            // DATP Components
+            const datp = data.defaultAtps || [];
+            document.getElementById('h-datp-header').textContent = `🛒 DATP - ${datp.length} COMPONENTS`;
+            const datpHtml = datp.map(item => `
+                <div class="component-box">
+                    <div class="comp-name">${item.packageName}</div>
+                    <span class="arrow" onclick="toggleComponent(this)">▼</span>
+                    <div class="comp-details">
+                        <div class="pill-container">
+                            <div class="pill"><strong>Validity:</strong> ${item.validity}</div>
+                            <div class="pill"><strong>Renewal:</strong> ${item.renewal}</div>
+                            <div class="pill"><strong>Midnight:</strong> ${item.midnightExpiry}</div>
+                            <div class="pill"><strong>Rental:</strong> ${item.rental}</div>
+                            <div class="pill"><strong>Max Count:</strong> ${item.maxCount}</div>
+                            <div class="pill"><strong>Free Cycles:</strong> ${item.freeCycles}</div>
                         </div>
                     </div>
-                    `
-                    : "📦 Main Plan: Not Selected";
+                </div>
+            `).join('');
+            document.getElementById('h-datp').innerHTML = datpHtml || '<p style="color:#64748b; padding:10px;">No DATP components</p>';
 
-            // ───────── DATP ─────────
-            const datp = data.defaultAtps || [];
-
-            document.getElementById('treeDatp').innerHTML =
-                datp.length
-                    ? `
-                    <b>➕ DATP</b>
-                    ${datp.map(d => `
-                        <div class="plan-box">
-                            <div class="plan-title">
-                                ${d.packageName}
-                            </div>
-                            <div class="plan-meta">
-                                Validity: ${d.validity || '-'} |
-                                Renewal: ${d.renewal === 'Y' ? 'Yes' : 'No'} |
-                                Rental: ${d.rental || '0'}
-                            </div>
-                        </div>
-                    `).join("")}
-                    `
-                    : "➕ DATP: No plan selected";
-
-            // ───────── AATP ─────────
+            // AATP Components
             const aatp = data.additionalAtps || [];
-
-            document.getElementById('treeAatp').innerHTML =
-                aatp.length
-                    ? `
-                    <b>🛒 AATP</b>
-                    ${aatp.map(a => `
-                        <div class="plan-box">
-                            <div class="plan-title">
-                                ${a.packageName}
-                            </div>
-                            <div class="plan-meta">
-                                Validity: ${a.validity || '-'} |
-                                Renewal: ${a.renewal === 'Y' ? 'Yes' : 'No'} |
-                                Rental: ${a.rental || '0'}
-                            </div>
+            document.getElementById('h-aatp-header').textContent = `➕ AATP - ${aatp.length} COMPONENTS`;
+            const aatpHtml = aatp.map(item => `
+                <div class="component-box">
+                    <div class="comp-name">${item.packageName}</div>
+                    <span class="arrow" onclick="toggleComponent(this)">▼</span>
+                    <div class="comp-details">
+                        <div class="pill-container">
+                            <div class="pill"><strong>Validity:</strong> ${item.validity}</div>
+                            <div class="pill"><strong>Midnight:</strong> ${item.midnightExpiry}</div>
+                            <div class="pill"><strong>Renewal:</strong> ${item.renewal}</div>
+                            <div class="pill"><strong>Rental:</strong> ${item.rental}</div>
+                            <div class="pill"><strong>Max Count:</strong> ${item.maxCount}</div>
+                            <div class="pill"><strong>Free Cycles:</strong> ${item.freeCycles}</div>
                         </div>
-                    `).join("")}
-                    `
-                    : "🛒 AATP: No plan selected";
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('h-aatp').innerHTML = aatpHtml || '<p style="color:#64748b; padding:10px;">No AATP components</p>';
 
-            // ───────── FOOTER ─────────
-            document.getElementById('treeCharge').innerHTML =
-                `<b>Charge:</b> ${data.charge || 'N/A'} 
-                 | <b>Ends:</b> ${data.endDate || 'Permanent'}`;
-
-            // ───────── OPEN MODAL ─────────
-            document.getElementById('treeModal').classList.add('open');
-
+            // Footer
+            document.getElementById('h-footer-bar').innerHTML = `
+                <div><b>Charge:</b> RM ${data.charge}</div>
+                <div><b>Ends:</b> ${data.endDate}</div>
+            `;
         })
         .catch(err => {
             console.error(err);
-            alert("Error loading hierarchy");
+            alert("Could not load hierarchy");
         });
 }
 
+// Toggle arrow function
+function toggleComponent(arrow) {
+    const componentBox = arrow.parentElement;
+    const details = componentBox.querySelector('.comp-details');
 
-// CLOSE MODAL
-function closeTree() {
-    document.getElementById('treeModal').classList.remove('open');
+    if (details) {
+        const isHidden = details.style.display === 'none' || details.style.display === '';
+
+        details.style.display = isHidden ? 'block' : 'none';
+
+        // Rotate arrow
+        arrow.style.transform = isHidden
+            ? 'translateY(-50%) rotate(180deg)'
+            : 'translateY(-50%) rotate(0deg)';
+    }
 }
 
-// CLOSE ON OUTSIDE CLICK
-// document.addEventListener('DOMContentLoaded', () => {
-//     const modal = document.getElementById('treeModal');
+// // Approve / Reject
+// function approvePackage(tpName, btn) {
+//     handleAction(tpName, 'A', btn);
+// }
 
-//     modal.addEventListener('click', function (e) {
-//         if (e.target.id === 'treeModal') {
-//             closeTree();
-//         }
-//     });
-// });
+// function rejectPackage(tpName, btn) {
+//     handleAction(tpName, 'R', btn);
+// }
+
+// function handleAction(tariffPackageId, status, btn) {
+//     fetch('/admin/updateStatus', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ tariffPackageId, status })
+//     })
+//         .then(res => {
+//             if (res.ok) {
+//                 const card = btn.closest('.approval-card');
+//                 if (card) card.remove();
+
+//                 alert(status === 'A' ? '✅ Package Approved' : '❌ Package Rejected');
+
+//                 // Clear right panel if no cards left or selected one is gone
+//                 if (document.querySelectorAll('.approval-card').length === 0) {
+//                     document.getElementById('hierarchy-view').classList.add('hidden');
+//                     document.getElementById('no-selection').classList.remove('hidden');
+//                 }
+//             } else {
+//                 alert('Action failed');
+//             }
+//         })
+//         .catch(() => alert('Server error'));
+// }

@@ -16,14 +16,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.xius.TariffBuilder.Dto.UsrLoginRequest;
-import com.xius.TariffBuilder.Dto.UsrLoginResponse;
+import com.xius.TariffBuilder.Dto.LoginRequestDto;
 import com.xius.TariffBuilder.Dto.UsrPrivilegeDTO;
 import com.xius.TariffBuilder.Entity.ServicePlanPackMap;
 import com.xius.TariffBuilder.UserService.SaveConfigService;
 import com.xius.TariffBuilder.UserService.ServicePlanService;
 import com.xius.TariffBuilder.UserService.TariffService;
-import com.xius.TariffBuilder.UserService.UsrLoginService;
+import com.xius.TariffBuilder.UserService.UserLoginService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -40,64 +39,78 @@ public class BuilderController {
     private SaveConfigService saveConfigService;
 
     @Autowired
-    private UsrLoginService usrLoginService;
+    private UserLoginService userLoginService;
 
     // ================= LOGIN =================
 
     @GetMapping("/loginform")
-    public String showLoginForm(Model model) {
-        model.addAttribute("loginForm", new UsrLoginRequest());
+    public String showLoginPage(Model model) {
+
+        model.addAttribute("loginForm", new LoginRequestDto());
+
         return "login";
     }
 
+    // process login
     @PostMapping("/login")
-    public String processLogin(@ModelAttribute UsrLoginRequest loginForm,
-            Model model,
-            HttpSession session) {
+    public String login(
 
-        // Validation
-        if (loginForm.getNetworkLoginName() == null || loginForm.getNetworkLoginName().trim().isEmpty()) {
+            @ModelAttribute("loginForm") LoginRequestDto request,
+
+            HttpSession session,
+
+            Model model) {
+
+        // validations
+
+        if (request.getNetworkLoginName() == null || request.getNetworkLoginName().isBlank()) {
+
             model.addAttribute("message", "Please enter Network Name");
-            model.addAttribute("loginForm", loginForm);
+
             return "login";
         }
 
-        if (loginForm.getLoginId() == null || loginForm.getLoginId().trim().isEmpty()) {
+        if (request.getLoginId() == null || request.getLoginId().isBlank()) {
+
             model.addAttribute("message", "Please enter Username");
-            model.addAttribute("loginForm", loginForm);
+
             return "login";
         }
 
-        if (loginForm.getPassword() == null || loginForm.getPassword().trim().isEmpty()) {
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+
             model.addAttribute("message", "Please enter Password");
-            model.addAttribute("loginForm", loginForm);
+
             return "login";
         }
 
-        UsrLoginResponse response = usrLoginService.authenticate(loginForm);
+        try {
 
-        // Invalid login
-        if (response == null || response.getLoginId() == null) {
-            model.addAttribute("message", "Invalid Credentials");
-            model.addAttribute("loginForm", loginForm);
+            Map<String, Object> loginData = userLoginService.authenticate(request);
+
+            List<UsrPrivilegeDTO> privileges = (List<UsrPrivilegeDTO>) loginData.get("privileges");
+            
+            List<String> privilegeIds = privileges.stream()
+
+                    .map(UsrPrivilegeDTO::getPrivilegeId)
+
+                    .distinct()
+
+                    .collect(Collectors.toList());
+
+            session.setAttribute("username", request.getLoginId());
+            session.setAttribute("networkId", loginData.get("networkId"));
+            session.setAttribute("privileges", privileges);
+            session.setAttribute("privilegeIds", privilegeIds);
+
+            return "redirect:/builder";
+        } 
+        catch (Exception ex) {
+
+            model.addAttribute("message", ex.getMessage());
+
             return "login";
         }
-
-        // Extract privileges safely
-        List<String> privilegeIds = response.getPrivileges() != null
-                ? response.getPrivileges()
-                        .stream()
-                        .map(UsrPrivilegeDTO::getPrivilegeId)
-                        .collect(Collectors.toList())
-                : List.of();
-
-        // Store in session
-        session.setAttribute("username", response.getLoginId());
-        session.setAttribute("networkId", response.getNetworkId());
-        session.setAttribute("privileges", response.getPrivileges());
-        session.setAttribute("privilegeIds", privilegeIds);
-
-        return "redirect:/builder";
     }
 
     @GetMapping("/builder")

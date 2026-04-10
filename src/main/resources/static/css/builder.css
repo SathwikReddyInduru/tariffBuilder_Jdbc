@@ -877,31 +877,6 @@ body {
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* ═══════════════════════════════════════
-   ADMIN
-═══════════════════════════════════════ */
-.main-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.page-wrapper {
-    width: 100%;
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.page-title {
-    text-align: center;
-    /* font-size: 26px; */
-    font-weight: 700;
-    color: #6366f1;
-    margin-bottom: 20px;
-    word-spacing: 5px;
-}
-
 .draft-list {
     display: flex;
     flex-direction: column;
@@ -1014,6 +989,323 @@ body {
 
 .tree-card {
     animation: scaleIn 0.2s ease;
+}
+
+/* header */
+.plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 700;
+    padding: 6px 0;
+}
+
+/* collapsible content */
+.plan-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+}
+
+/* when open */
+.plan-content.open {
+    max-height: 200px;
+}
+
+/* meta pills (reuse) */
+.meta-pill {
+    display: inline-block;
+    background: #eef2ff;
+    color: #3730a3;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    margin: 3px 4px 0 0;
+}
+
+/* ═══════════════════════════════════════
+   NEW TWO-PANE ADMIN UI
+═══════════════════════════════════════ */
+
+.pane-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 16px;
+}
+
+.pane-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+}
+
+.count {
+    font-size: 13px;
+    font-weight: 700;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 4px 14px;
+    border-radius: 9999px;
+}
+
+.approval-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.approval-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.approval-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.12);
+}
+
+.approval-card.selected {
+    border-color: var(--primary);
+    background: #f8faff;
+}
+
+.card-content {
+    flex: 1;
+}
+
+.package-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    display: block;
+}
+
+.package-meta {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-approve {
+    background: #10b981;
+    color: white;
+}
+
+.btn-reject {
+    background: #f04438;
+    color: white;
+}
+
+/* ══════════════════════════
+   COMPACT TWO-PANE ADMIN UI
+═════════════════════════════ */
+.admin-container {
+    display: flex;
+    gap: 20px;
+    height: 100%;
+    width: 100%;
+    max-width: 1380px;
+    margin: 0 auto;
+}
+
+.left-pane {
+    width: 400px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.right-pane {
+    flex: 1;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Placeholder */
+.placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    gap: 8px;
+}
+
+.placeholder .material-icons {
+    font-size: 60px;
+    opacity: 0.25;
+}
+
+/* Hierarchy - Compact Version */
+.hierarchy-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.package-header {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.package-header h2 {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0 0 6px 0;
+}
+
+.meta-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.meta-pill {
+    background: #eef2ff;
+    color: #3730a3;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+.section {
+    margin-bottom: 22px;
+}
+
+.section h4 {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    letter-spacing: 0.6px;
+}
+
+.plan-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-weight: 700;
+    font-size: 15px;
+}
+
+/* === COMPONENT BOX === */
+.components-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.component-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14.5px;
+    margin-bottom: 8px;
+    position: relative;
+    /* Important for absolute arrow */
+}
+
+.comp-name {
+    flex: 1;
+    font-weight: 700;
+    padding-right: 40px;
+    /* Space for fixed arrow */
+}
+
+/* Arrow - Fixed Position on Right */
+.arrow {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #64748b;
+    cursor: pointer;
+    transition: transform 0.25s ease;
+    z-index: 10;
+    padding: 6px;
+    background: #f8fafc;
+    /* Prevents text overlap */
+}
+
+.arrow.rotate {
+    transform: rotate(180deg);
+}
+
+/* Details as Pills */
+.comp-details {
+    display: none;
+    width: 100%;
+    margin-top: 12px;
+    padding: 14px;
+    background: #f1f5f9;
+    border-radius: 12px;
+}
+
+.comp-details .pill-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.comp-details .pill {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 6px 12px;
+    border-radius: 9999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.footer-bar {
+    margin-top: auto;
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-radius: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
 }
 
 @keyframes scaleIn {
