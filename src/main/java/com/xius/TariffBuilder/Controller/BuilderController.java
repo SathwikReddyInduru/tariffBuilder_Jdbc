@@ -44,10 +44,13 @@ public class BuilderController {
     // ================= LOGIN =================
 
     @GetMapping("/loginform")
-    public String showLoginPage(Model model) {
+    public String showLoginPage(HttpSession session, Model model) {
+
+        if (!isNotLoggedIn(session)) {
+            return "redirect:/builder";
+        }
 
         model.addAttribute("loginForm", new LoginRequestDto());
-
         return "login";
     }
 
@@ -89,7 +92,7 @@ public class BuilderController {
             Map<String, Object> loginData = userLoginService.authenticate(request);
 
             List<UsrPrivilegeDTO> privileges = (List<UsrPrivilegeDTO>) loginData.get("privileges");
-            
+
             List<String> privilegeIds = privileges.stream()
 
                     .map(UsrPrivilegeDTO::getPrivilegeId)
@@ -104,8 +107,7 @@ public class BuilderController {
             session.setAttribute("privilegeIds", privilegeIds);
 
             return "redirect:/builder";
-        } 
-        catch (Exception ex) {
+        } catch (Exception ex) {
 
             model.addAttribute("message", ex.getMessage());
 

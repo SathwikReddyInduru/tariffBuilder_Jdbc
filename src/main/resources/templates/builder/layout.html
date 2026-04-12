@@ -96,7 +96,8 @@
             <header class="header">
                 <div class="header-inner" style="display:flex; align-items:center;">
                     <div class="logo">
-                        Builder | <span th:text="${username != null ? username : 'user'}">user</span>
+                        <span th:text="${activeStep == 0} ? 'Approver' : 'Builder'">Builder</span>
+                        | <span th:text="${username != null ? username : 'user'}">user</span>
                     </div>
                     <input type="text" placeholder="Name..." class="config-name" id="configName">
                 </div>

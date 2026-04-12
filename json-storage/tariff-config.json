@@ -5,6 +5,7 @@
     "networkId" : 16,
     "data" : {
       "username" : "USER1",
+      "submittedOn" : "10 Apr 2026",
       "packageType" : "POSTPAID",
       "tariffPackCategory" : "COMMERCIAL",
       "tariffPackageDesc" : "TP_2",

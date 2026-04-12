@@ -5,32 +5,56 @@
     <title>Package Type</title>
 </head>
 <body>
-    
     <section class="stage">
 
         <div class="step-guide">
-            <b>Choose Base Type</b>
-            Select the foundational billing type.
-            <b>Normal</b> is simple;
-            <b>Commercial</b> allows full recurring billing configuration.
+            <div class="guide-steps">
+                <div class="guide-step">
+                    <span class="guide-num">1</span>
+                    <span><span class="guide-label">Pick a billing type —</span> <strong>PREPAID</strong> or <strong>POSTPAID</strong></span>
+                </div>
+                <div class="guide-step">
+                    <span class="guide-num">2</span>
+                    <span><span class="guide-label">Pick a category —</span> <strong>NORMAL</strong> for simple plans, <strong>COMMERCIAL</strong> for recurring billing</span>
+                </div>
+            </div>
         </div>
 
-        <h1 class="main-title">Choose Base Type</h1>
+        <div class="step1-layout">
 
-        <div id="typeSection" class="type-grid">
-            <div class="type-card" onclick="selectType('PREPAID')">PREPAID</div>
-            <div class="type-card" onclick="selectType('POSTPAID')">POSTPAID</div>
-        </div>
+            <div class="step1-group">
+                <p class="step1-label">BILLING TYPE</p>
+                <div id="typeSection" class="type-grid">
+                    <div class="type-card" id="card-PREPAID" onclick="selectType('PREPAID')">
+                        <span class="type-icon material-icons">phone_android</span>
+                        PREPAID
+                    </div>
+                    <div class="type-card" id="card-POSTPAID" onclick="selectType('POSTPAID')">
+                        <span class="type-icon material-icons">receipt_long</span>
+                        POSTPAID
+                    </div>
+                </div>
+            </div>
 
-        <div id="subTypeSection" class="type-grid hidden">
-            <div class="type-card" onclick="selectSubType('NORMAL')">NORMAL</div>
-            <div class="type-card" onclick="selectSubType('COMMERCIAL')">COMMERCIAL</div>
+            <div class="step1-arrow material-icons">arrow_forward</div>
+
+            <div class="step1-group" id="subTypeGroup" style="opacity:0.3; pointer-events:none;">
+                <p class="step1-label">CATEGORY</p>
+                <div id="subTypeSection" class="type-grid">
+                    <div class="type-card" id="card-NORMAL" onclick="selectSubType('NORMAL')">
+                        <span class="type-icon material-icons">layers</span>
+                        NORMAL
+                    </div>
+                    <div class="type-card" id="card-COMMERCIAL" onclick="selectSubType('COMMERCIAL')">
+                        <span class="type-icon material-icons">business_center</span>
+                        COMMERCIAL
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <script th:src="@{/js/step1.js}"></script>
-        
-
     </section>
-
 </body>
 </html>
