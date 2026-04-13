@@ -4,6 +4,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -13,118 +15,129 @@ import com.xius.TariffBuilder.Dto.UsrPrivilegeDTO;
 @Repository
 public class UserAuthRepository {
 
-	@Repository
-	public class LoginRepository {
+	private static final Logger logger = LoggerFactory.getLogger(UserAuthRepository.class);
 
-		@Autowired
-		private JdbcTemplate jdbcTemplate;
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 
-		public List<UsrPrivilegeDTO> getUserPrivileges(
+	public List<UsrPrivilegeDTO> getUserPrivileges(String networkName, String loginId, String password) {
 
-				String networkName, String loginId, String password) {
+		logger.info("Fetching user privileges for loginId={} networkName={}", loginId, networkName);
 
-			String sql = """
+		String sql = """
 
-					SELECT DISTINCT
-					       u.network_id,
-					       n.status_code network_status,
-					       u.status_code user_status,
-					       p.privilege_id,
-					       p.privilege_name,
-					       p.privilege_desc,
-					       p.module_id
+				SELECT DISTINCT
+				       u.network_id,
+				       n.status_code network_status,
+				       u.status_code user_status,
+				       p.privilege_id,
+				       p.privilege_name,
+				       p.privilege_desc,
+				       p.module_id
 
-					FROM ums_mt_user u
+				FROM ums_mt_user u
 
-					JOIN glb_mt_network n
-					ON n.network_id = u.network_id
-
-
-					LEFT JOIN ums_tt_user_roles r
-					ON r.login_id = u.login_id
-					AND r.network_id = u.network_id
+				JOIN glb_mt_network n
+				ON n.network_id = u.network_id
 
 
-					LEFT JOIN ums_tt_roleprofile rp
-					ON rp.role_id = r.role_id
+				LEFT JOIN ums_tt_user_roles r
+				ON r.login_id = u.login_id
+				AND r.network_id = u.network_id
 
 
-					LEFT JOIN ums_mt_privilege p
-					ON p.privilege_id = rp.privilege_id
+				LEFT JOIN ums_tt_roleprofile rp
+				ON rp.role_id = r.role_id
 
 
-					WHERE upper(n.network_display)=upper(?)
+				LEFT JOIN ums_mt_privilege p
+				ON p.privilege_id = rp.privilege_id
 
-					AND upper(u.login_id)=upper(?)
 
-					AND u.password_name = ?
+				WHERE upper(n.network_display)=upper(?)
 
-					""";
+				AND upper(u.login_id)=upper(?)
 
-			return jdbcTemplate.query(
+				AND u.password_name = ?
 
-					sql,
+				""";
 
-					(rs, rowNum) -> {
+		List<UsrPrivilegeDTO> result = jdbcTemplate.query(
 
-						UsrPrivilegeDTO dto = new UsrPrivilegeDTO();
+				sql,
 
-						dto.setPrivilegeId(rs.getString("privilege_id"));
+				(rs, rowNum) -> {
 
-						dto.setPrivilegeName(rs.getString("privilege_name"));
+					UsrPrivilegeDTO dto = new UsrPrivilegeDTO();
 
-						dto.setPrivilegeDesc(rs.getString("privilege_desc"));
+					dto.setPrivilegeId(rs.getString("privilege_id"));
 
-						dto.setModuleId(rs.getString("module_id"));
+					dto.setPrivilegeName(rs.getString("privilege_name"));
 
-						return dto;
+					dto.setPrivilegeDesc(rs.getString("privilege_desc"));
 
-					},
+					dto.setModuleId(rs.getString("module_id"));
 
-					networkName,
+					return dto;
 
-					loginId,
+				},
 
-					sha1(password));
-		}
+				networkName, loginId, sha1(password));
 
-		public Long getNetworkId(
+		logger.info("Privileges fetched count={} for loginId={}", result.size(), loginId);
 
-				String networkName) {
+		return result;
+	}
 
-			String sql = """
+	public Long getNetworkId(String networkName) {
 
-					SELECT network_id
+		logger.info("Fetching networkId for networkName={}", networkName);
 
-					FROM glb_mt_network
+		String sql = """
 
-					WHERE upper(network_display)=upper(?)
+				SELECT network_id
 
-					""";
+				FROM glb_mt_network
 
-			return jdbcTemplate.queryForObject(sql, Long.class, networkName);
-		}
+				WHERE upper(network_display)=upper(?)
 
-		private String sha1(String input) {
+				""";
 
-			try {
+		Long networkId = jdbcTemplate.queryForObject(sql, Long.class, networkName);
 
-				MessageDigest md = MessageDigest.getInstance("SHA-1");
+		logger.info("Fetched networkId={} for networkName={}", networkId, networkName);
 
-				byte[] bytes = md.digest(input.getBytes(StandardCharsets.UTF_8));
+		return networkId;
+	}
 
-				StringBuilder hex = new StringBuilder();
+	private String sha1(String input) {
 
-				for (byte b : bytes) {
+		logger.debug("Generating SHA1 hash");
 
-					hex.append(String.format("%02X", b));
-				}
+		try {
 
-				return hex.toString();
-			} catch (Exception e) {
+			MessageDigest md = MessageDigest.getInstance("SHA-1");
 
-				throw new RuntimeException(e);
+			byte[] bytes = md.digest(input.getBytes(StandardCharsets.UTF_8));
+
+			StringBuilder hex = new StringBuilder();
+
+			for (byte b : bytes) {
+
+				hex.append(String.format("%02X", b));
 			}
+
+			String hashedValue = hex.toString();
+
+			logger.debug("SHA1 hash generated successfully");
+
+			return hashedValue;
+
+		} catch (Exception e) {
+
+			logger.error("Error while generating SHA1 hash", e);
+
+			throw new RuntimeException(e);
 		}
 	}
 }

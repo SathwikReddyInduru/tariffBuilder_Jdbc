@@ -4,51 +4,51 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.xius.TariffBuilder.Dto.LoginRequestDto;
 import com.xius.TariffBuilder.Dto.UsrPrivilegeDTO;
-import com.xius.TariffBuilder.UserService.UserAuthRepository.LoginRepository;
 
 @Service
 public class UserLoginService {
 
-        @Autowired
-        private LoginRepository repository;
+	private static final Logger logger = LoggerFactory.getLogger(UserLoginService.class);
 
-        public Map<String, Object> authenticate(
-                        LoginRequestDto request) {
+	@Autowired
+	private UserAuthRepository repository;
 
-                List<UsrPrivilegeDTO> privileges =
+	public Map<String, Object> authenticate(LoginRequestDto request) {
 
-                                repository.getUserPrivileges(
+		logger.info("Authentication started for loginId={} networkName={}", request.getLoginId(),
+				request.getNetworkLoginName());
 
-                                                request.getNetworkLoginName(),
+		List<UsrPrivilegeDTO> privileges = repository.getUserPrivileges(request.getNetworkLoginName(),
+				request.getLoginId(), request.getPassword());
 
-                                                request.getLoginId(),
+		logger.debug("Privileges fetched count={}", privileges.size());
 
-                                                request.getPassword());
+		if (privileges.isEmpty()) {
 
-                if (privileges.isEmpty()) {
+			logger.error("Authentication failed for loginId={} - no privileges found", request.getLoginId());
 
-                        throw new RuntimeException(
-                                        "Invalid User Credentials");
-                }
+			throw new RuntimeException("Invalid User Credentials");
+		}
 
-                Long networkId = repository.getNetworkId(
-                                request.getNetworkLoginName());
+		Long networkId = repository.getNetworkId(request.getNetworkLoginName());
 
-                Map<String, Object> result = new HashMap<>();
+		logger.info("Authentication successful loginId={} networkId={}", request.getLoginId(), networkId);
 
-                result.put(
-                                "networkId",
-                                networkId);
+		Map<String, Object> result = new HashMap<>();
 
-                result.put(
-                                "privileges",
-                                privileges);
+		result.put("networkId", networkId);
 
-                return result;
-        }
+		result.put("privileges", privileges);
+
+		logger.debug("Authentication result prepared for loginId={}", request.getLoginId());
+
+		return result;
+	}
 }

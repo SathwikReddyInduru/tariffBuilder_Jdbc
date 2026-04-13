@@ -1,3 +1,5 @@
+
+
 package com.xius.TariffBuilder.Entity;
 
 public class TariffEntity {
@@ -6,6 +8,7 @@ public class TariffEntity {
     private Long tariffPackageId;
     private String tariffPackageName;
     private String status;
+
 
     public Long getNetworkId() {
         return networkId;

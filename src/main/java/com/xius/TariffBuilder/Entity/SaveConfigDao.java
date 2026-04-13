@@ -7,64 +7,36 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class SaveConfigDao {
 
-	
 	@Autowired
-    private JdbcTemplate jdbcTemplate;
+	private JdbcTemplate jdbcTemplate;
 
+	public boolean checkTariffExists(
 
-    public boolean checkTariffExists(
+			Long networkId,
 
-            Long networkId,
+			String tpName) {
 
-            String tpName){
+		String sql = """
+				SELECT COUNT(1)
+				FROM cs_rat_tariff_package
+				WHERE network_id = ?
+				AND UPPER(tariff_package_desc)=UPPER(?)
+				""";
 
-        String sql = """
-        SELECT COUNT(1)
-        FROM cs_rat_tariff_package
-        WHERE network_id = ?
-        AND UPPER(tariff_package_desc)=UPPER(?)
-        """;
+		Integer count = jdbcTemplate.queryForObject(sql, Integer.class, networkId, tpName);
+		return count > 0;
+	}
 
-        Integer count =
-                jdbcTemplate.queryForObject(
+	public boolean checkPublicityExists(Long networkId, String publicityId) {
 
-                        sql,
+		String sql = """
+				SELECT COUNT(1)
+				FROM cs_rat_tariff_package
+				WHERE network_id = ?
+				AND UPPER(publicity_id)=UPPER(?)
+				""";
 
-                        Integer.class,
-
-                        networkId,
-
-                        tpName);
-
-        return count > 0;
-    }
-
-
-
-    public boolean checkPublicityExists(
-
-            Long networkId,
-
-            String publicityId){
-
-        String sql = """
-        SELECT COUNT(1)
-        FROM cs_rat_tariff_package
-        WHERE network_id = ?
-        AND UPPER(publicity_id)=UPPER(?)
-        """;
-
-        Integer count =
-                jdbcTemplate.queryForObject(
-
-                        sql,
-
-                        Integer.class,
-
-                        networkId,
-
-                        publicityId);
-
-        return count > 0;
-    }
+		Integer count = jdbcTemplate.queryForObject(sql, Integer.class, networkId, publicityId);
+		return count > 0;
+	}
 }

@@ -37,4 +37,6 @@ public class UsrPrivilegeDTO {
 	public void setModuleId(String moduleId) {
 		this.moduleId = moduleId;
 	}
+
+
 }

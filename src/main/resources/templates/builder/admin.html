@@ -27,11 +27,19 @@
                             <span class="package-name" th:text="${tpName}"></span>
                         </div>
                         <div class="actions">
-                            <button class="btn btn-approve" th:attr="onclick=|approvePackage('${tpName}', this)|"
-                                onclick="event.stopImmediatePropagation()">Approve</button>
-                            <button class="btn btn-reject" th:attr="onclick=|rejectPackage('${tpName}', this)|"
-                                onclick="event.stopImmediatePropagation()">Reject</button>
-                        </div>
+
+							<button class="btn btn-approve"
+								th:attr="onclick=|approvePackage('${tpName}', this, event)|">
+
+								Approve</button>
+
+
+							<button class="btn btn-reject"
+								th:attr="onclick=|rejectPackage('${tpName}', this, event)|">
+
+								Reject</button>
+
+						</div>
                     </div>
                 </div>
 

@@ -15,150 +15,356 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Component
 public class JsonStorage {
 
-        private static final Logger logger = LoggerFactory.getLogger(JsonStorage.class);
+	private static final Logger logger =
+			LoggerFactory.getLogger(JsonStorage.class);
 
-        private final ObjectMapper mapper = new ObjectMapper();
-        private final String FILE_PATH = "json-storage/tariff-config.json";
+	private final ObjectMapper mapper =
+			new ObjectMapper();
 
-        public boolean exists(String tpName) {
+	private final String FILE_PATH =
+			"json-storage/tariff-config.json";
 
-                logger.debug("Checking JSON existence for tpName={}", tpName);
 
-                try {
-                        File file = new File(FILE_PATH);
 
-                        // FIX: handle file not exists OR empty file
-                        if (!file.exists() || file.length() == 0) {
+	/*
+	check if tp exists
+	*/
+	public boolean exists(String tpName) {
 
-                                logger.debug("JSON file not found OR empty path={}", FILE_PATH);
+		logger.debug(
+				"Checking JSON existence for tpName={}",
+				tpName
+		);
 
-                                return false;
-                        }
+		try {
 
-                        Map<String, Object> json = mapper.readValue(file, new TypeReference<Map<String, Object>>() {
-                        });
+			File file =
+					new File(FILE_PATH);
 
-                        boolean exists = json.containsKey(tpName);
+			if (!file.exists() || file.length() == 0) {
 
-                        logger.debug("JSON exists={} for tpName={}", exists, tpName);
+				return false;
+			}
 
-                        return exists;
-                }
+			Map<String, Object> json =
+					mapper.readValue(
 
-                catch (Exception e) {
+							file,
 
-                        logger.error("Error checking JSON existence tpName={}", tpName, e);
+							new TypeReference<Map<String, Object>>() {}
+					);
 
-                        return false;
-                }
-        }
+			return json.containsKey(tpName);
+		}
 
-        public void store(
+		catch (Exception e) {
 
-                        String tpName,
-                        String username,
-                        Long networkId,
-                        Map<String, Object> request) {
+			logger.error(
+					"exists error",
+					e
+			);
 
-                logger.info("Storing JSON config tpName={} username={} networkId={}", tpName, username, networkId);
+			return false;
+		}
+	}
 
-                try {
-                        File file = new File(FILE_PATH);
 
-                        file.getParentFile().mkdirs();
 
-                        Map<String, Object> json = new LinkedHashMap<>();
+	/*
+	store request json
+	*/
+	public void store(
 
-                        // FIX: read only if file has data
-                        if (file.exists() && file.length() > 0) {
+			String tpName,
 
-                                logger.debug("Existing JSON file found. Loading data");
+			String username,
 
-                                json = mapper.readValue(file, new TypeReference<Map<String, Object>>() {
-                                });
-                        }
+			Long networkId,
 
-                        Map<String, Object> tpData = new LinkedHashMap<>();
+			Map<String, Object> request) {
 
-                        tpData.put("tpName", tpName);
-                        tpData.put("username", username);
-                        tpData.put("networkId", networkId);
-                        tpData.put("data", request);
-                        json.put(tpName, tpData);
+		logger.info(
+				"Storing JSON tpName={}",
+				tpName
+		);
 
-                        mapper.writerWithDefaultPrettyPrinter().writeValue(file, json);
+		try {
 
-                        logger.info("JSON stored successfully for tpName={}", tpName);
+			File file =
+					new File(FILE_PATH);
 
-                }
+			file.getParentFile().mkdirs();
 
-                catch (Exception e) {
 
-                        logger.error("Error storing JSON tpName={}", tpName, e);
-                }
-        }
+			Map<String, Object> json =
+					new LinkedHashMap<>();
 
-        public Set<String> getAllTpNames() {
 
-                logger.debug("Fetching all TP names from JSON");
+			if (file.exists() && file.length() > 0) {
 
-                try {
-                        File file = new File(FILE_PATH);
+				json =
+						mapper.readValue(
 
-                        // FIX: return empty if file empty
-                        if (!file.exists() || file.length() == 0) {
+								file,
 
-                                logger.debug("JSON file not found OR empty while fetching TP names");
+								new TypeReference<Map<String, Object>>() {}
+						);
+			}
 
-                                return Set.of();
-                        }
 
-                        Map<String, Object> json = mapper.readValue(file, new TypeReference<Map<String, Object>>() {
-                        });
+			Map<String, Object> tpData =
+					new LinkedHashMap<>();
 
-                        logger.debug("TP names fetched count={}", json.size());
 
-                        return json.keySet();
-                }
+			tpData.put(
+					"tpName",
+					tpName
+			);
 
-                catch (Exception e) {
+			tpData.put(
+					"username",
+					username
+			);
 
-                        logger.error("Error fetching TP names from JSON", e);
+			tpData.put(
+					"networkId",
+					networkId
+			);
 
-                        return Set.of();
-                }
-        }
+			tpData.put(
+					"data",
+					request
+			);
 
-        public Object getTpData(String tpName) {
 
-                logger.info("Fetching TP data from JSON tpName={}", tpName);
+			json.put(
+					tpName,
+					tpData
+			);
 
-                try {
-                        File file = new File(FILE_PATH);
 
-                        // FIX: return null if file empty
-                        if (!file.exists() || file.length() == 0) {
+			mapper
+			.writerWithDefaultPrettyPrinter()
+			.writeValue(
+					file,
+					json
+			);
 
-                                logger.warn("JSON file not found OR empty for tpName={}", tpName);
+			logger.info(
+					"JSON stored {}",
+					tpName
+			);
 
-                                return null;
-                        }
+		}
 
-                        Map<String, Object> json = mapper.readValue(file, new TypeReference<Map<String, Object>>() {
-                        });
+		catch (Exception e) {
 
-                        Object data = json.get(tpName);
+			logger.error(
+					"store error",
+					e
+			);
+		}
+	}
 
-                        logger.debug("TP data found={} for tpName={}", data != null, tpName);
 
-                        return data;
-                }
 
-                catch (Exception e) {
+	/*
+	get all tp names
+	*/
+	public Set<String> getAllTpNames() {
 
-                        logger.error("Error fetching TP data tpName={}", tpName, e);
+		try {
 
-                        return null;
-                }
-        }
+			File file =
+					new File(FILE_PATH);
+
+			if (!file.exists() || file.length() == 0) {
+
+				return Set.of();
+			}
+
+			Map<String, Object> json =
+					mapper.readValue(
+
+							file,
+
+							new TypeReference<Map<String, Object>>() {}
+					);
+
+			return json.keySet();
+		}
+
+		catch (Exception e) {
+
+			logger.error(
+					"getAllTpNames error",
+					e
+			);
+
+			return Set.of();
+		}
+	}
+
+
+
+	/*
+	get single tp json
+	*/
+	public Object getTpData(String tpName) {
+
+		logger.info(
+				"Fetching JSON for {}",
+				tpName
+		);
+
+		try {
+
+			File file =
+					new File(FILE_PATH);
+
+			if (!file.exists() || file.length() == 0) {
+
+				return null;
+			}
+
+			Map<String, Object> json =
+					mapper.readValue(
+
+							file,
+
+							new TypeReference<Map<String, Object>>() {}
+					);
+
+			return json.get(tpName);
+		}
+
+		catch (Exception e) {
+
+			logger.error(
+					"getTpData error",
+					e
+			);
+
+			return null;
+		}
+	}
+
+
+
+	/*
+	read full json file
+	*/
+	public Map<String,Object> readAll(){
+
+		try{
+
+			File file =
+					new File(FILE_PATH);
+
+			if(!file.exists() || file.length()==0){
+
+				return new LinkedHashMap<>();
+			}
+
+			return mapper.readValue(
+
+					file,
+
+					new TypeReference<Map<String,Object>>() {}
+			);
+		}
+
+		catch(Exception e){
+
+			logger.error(
+					"readAll error",
+					e
+			);
+
+			return new LinkedHashMap<>();
+		}
+	}
+
+
+
+	/*
+	write full json file
+	*/
+	public void writeAll(
+
+			Map<String,Object> json){
+
+		try{
+
+			File file =
+					new File(FILE_PATH);
+
+			mapper
+			.writerWithDefaultPrettyPrinter()
+			.writeValue(
+					file,
+					json
+			);
+
+			logger.info(
+					"json updated"
+			);
+		}
+
+		catch(Exception e){
+
+			logger.error(
+					"writeAll error",
+					e
+			);
+		}
+	}
+
+
+
+	/*
+	remove tp after approve/reject
+	*/
+	public void remove(
+
+			String tpName){
+
+		try{
+
+			Map<String,Object> json =
+					readAll();
+
+
+			json.remove(tpName);
+
+
+			writeAll(json);
+
+
+			logger.info(
+					"json removed {}",
+					tpName
+			);
+
+		}
+
+		catch(Exception e){
+
+			logger.error(
+					"remove error",
+					e
+			);
+		}
+	}
+
+
+
+	/*
+	get full json map
+	*/
+	public Map<String,Object> getAll(){
+
+		return readAll();
+	}
+
 }

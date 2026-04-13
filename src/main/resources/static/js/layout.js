@@ -53,10 +53,13 @@ async function loadDrafts() {
         const drafts = await res.json();
 
         if (!drafts.length) {
-            container.innerHTML = `<div class="empty-state">
-                <span class="material-icons empty-icon">drafts</span>
-                <p>No drafts found</p>
-            </div>`;
+            container.innerHTML = `
+                <div class="drafts-empty">
+                    <span class="material-icons">edit_note</span>
+                    <p class="drafts-empty-title">No drafts yet</p>
+                    <p class="drafts-empty-sub">Your in-progress packages will appear here when you leave a step</p>
+                </div>
+            `;
             return;
         }
 
@@ -148,12 +151,57 @@ function applyPrivilege() {
     }
 }
 
+async function checkDraftsOnLogin() {
+    const isBuilderPage = window.location.pathname.startsWith('/builder/step');
+    if (!isBuilderPage) return;
+    if (!window.location.pathname.includes('step1')) return;
+
+    const state = JSON.parse(sessionStorage.getItem('state') || '{}');
+    const pkgType = sessionStorage.getItem('pkgType');
+    if (pkgType || state?.s2?.length) return;
+
+    try {
+        const res = await fetch('/draft/list');
+        const drafts = await res.json();
+
+        const tabs = document.querySelectorAll('.tab');
+        const container = document.getElementById('comp-list');
+
+        if (!drafts.length) {
+            // ensure Library tab is active
+            tabs.forEach(t => t.classList.remove('active'));
+            tabs[0]?.classList.add('active');
+            return;
+        }
+
+        // switch to Drafts tab
+        tabs.forEach(t => t.classList.remove('active'));
+        tabs[1]?.classList.add('active');
+
+        // render drafts
+        window.ALL_DRAFTS = drafts;
+        container.innerHTML = drafts.map((d, i) => `
+            <div class="draft-item">
+                <div class="draft-info" onclick="loadDraft(${i})">
+                    <span class="draft-name">${d.name || 'Untitled'}</span>
+                    <span class="draft-meta">${d.savedOn || '—'} · ${d.savedTime || ''}</span>
+                </div>
+                <span class="material-icons draft-delete" onclick="deleteDraft(${i}, event)">delete_outline</span>
+            </div>
+        `).join('');
+
+    } catch (err) {
+        console.error('Draft check failed', err);
+    }
+}
+
 // ── Apply privilege on load ──
 window.addEventListener('DOMContentLoaded', () => {
 
     applyPrivilege();
     restoreActiveModule();
     restoreConfigName();
+    checkDraftsOnLogin();
 
     // mark all step navigation as internal so draft save is skipped
     document.querySelectorAll('.step-node, .main-node').forEach(link => {
@@ -631,36 +679,118 @@ function loadHierarchy(tpName) {
         });
 }
 
-// // Approve / Reject
-// function approvePackage(tpName, btn) {
-//     handleAction(tpName, 'A', btn);
-// }
+function approvePackage(tpName, btn) {
 
-// function rejectPackage(tpName, btn) {
-//     handleAction(tpName, 'R', btn);
-// }
+    event.stopImmediatePropagation();
 
-// function handleAction(tariffPackageId, status, btn) {
-//     fetch('/admin/updateStatus', {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ tariffPackageId, status })
-//     })
-//         .then(res => {
-//             if (res.ok) {
-//                 const card = btn.closest('.approval-card');
-//                 if (card) card.remove();
+    if (!confirm("Approve " + tpName + " ?"))
+        return;
 
-//                 alert(status === 'A' ? '✅ Package Approved' : '❌ Package Rejected');
+    fetch("/approve/" + tpName, {
+        method: "POST"
+    })
+        .then(res => {
 
-//                 // Clear right panel if no cards left or selected one is gone
-//                 if (document.querySelectorAll('.approval-card').length === 0) {
-//                     document.getElementById('hierarchy-view').classList.add('hidden');
-//                     document.getElementById('no-selection').classList.remove('hidden');
-//                 }
-//             } else {
-//                 alert('Action failed');
-//             }
-//         })
-//         .catch(() => alert('Server error'));
-// }
+            if (!res.ok)
+                throw new Error("Approve failed");
+
+            return res.json();
+        })
+        .then(data => {
+
+            console.log("APPROVED", data);
+
+            alert(
+                "Tariff Created : "
+                + data.tariffPackageId
+            );
+
+            // removeCard(btn);
+            window.location.href = '/builder/admin';
+
+        })
+        .catch(err => {
+
+            console.error(err);
+
+            alert("Error approving tariff");
+        });
+}
+
+/* REJECT */
+function rejectPackage(tpName, btn) {
+
+    event.stopImmediatePropagation();
+
+    if (!confirm("Reject " + tpName + " ?"))
+        return;
+
+    fetch("/reject/" + tpName, {
+        method: "POST"
+    })
+        .then(res => {
+
+            if (!res.ok)
+                throw new Error("Reject failed");
+
+            return res.json();
+        })
+        .then(data => {
+
+            console.log("REJECTED", data);
+
+            alert("Rejected");
+
+            // removeCard(btn);
+            window.location.href = '/builder/admin';
+
+        })
+        .catch(err => {
+
+            console.error(err);
+
+            alert("Error rejecting tariff");
+        });
+}
+
+/* remove card from UI */
+function removeCard(btn) {
+
+    const card =
+        btn.closest(".approval-card");
+
+    if (card)
+        card.remove();
+
+    const remainingCards =
+        document.querySelectorAll(".approval-card").length;
+
+    /* clear right panel */
+    document
+        .getElementById("hierarchy-view")
+        .classList.add("hidden");
+
+    if (remainingCards === 0) {
+
+        /* show empty state */
+        document
+            .getElementById("no-packages")
+            ?.classList.remove("hidden");
+
+        document
+            .getElementById("no-selection")
+            .classList.add("hidden");
+    }
+    else {
+
+        /* still have cards */
+
+        document
+            .getElementById("no-selection")
+            .classList.remove("hidden");
+
+        document
+            .getElementById("no-packages")
+            ?.classList.add("hidden");
+    }
+}

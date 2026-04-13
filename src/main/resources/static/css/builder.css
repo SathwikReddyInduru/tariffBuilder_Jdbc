@@ -525,6 +525,38 @@ body {
     background: #fff1f0;
 }
 
+.drafts-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    gap: 8px;
+    text-align: center;
+}
+
+.drafts-empty .material-icons {
+    font-size: 36px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+}
+
+.drafts-empty-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+    margin: 0;
+}
+
+.drafts-empty-sub {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+    margin: 0;
+    line-height: 1.6;
+    max-width: 160px;
+}
+
 /* ═══════════════════════════════════════
    WORKSPACE
 ═══════════════════════════════════════ */
