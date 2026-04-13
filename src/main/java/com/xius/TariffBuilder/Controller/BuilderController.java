@@ -1,5 +1,9 @@
 package com.xius.TariffBuilder.Controller;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.xius.TariffBuilder.Dto.LoginRequestDto;
 import com.xius.TariffBuilder.Dto.UsrPrivilegeDTO;
 import com.xius.TariffBuilder.Entity.ServicePlanPackMap;
@@ -241,7 +247,62 @@ public class BuilderController {
         return tariffService.getHierarchy(tpName);
     }
 
-    // ================= SAVE CONFIG =================
+    // ================= DRAFT & SAVE CONFIG =================
+
+    @PostMapping("/draft/save")
+    @ResponseBody
+    public ResponseEntity<?> saveDraft(
+            @RequestBody(required = false) String draftJson,
+            HttpSession session) {
+
+        if (draftJson == null || draftJson.isBlank()) {
+            return ResponseEntity.ok().build();
+        }
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+
+            Map<String, Object> draft = mapper.readValue(draftJson, Map.class);
+
+            String username = (String) session.getAttribute("username");
+
+            if (username == null)
+                username = "guest";
+
+            saveConfigService.saveDraft(draft, username);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/draft/list")
+    @ResponseBody
+    public List<Map<String, Object>> getDrafts(HttpSession session) {
+
+        String username = (String) session.getAttribute("username");
+
+        if (username == null) {
+            username = "guest";
+        }
+
+        try {
+            Path path = Paths.get("drafts", username + ".json");
+
+            if (!Files.exists(path))
+                return new ArrayList<>();
+
+            return new ObjectMapper().readValue(
+                    path.toFile(),
+                    new TypeReference<List<Map<String, Object>>>() {
+                    });
+
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
 
     @PostMapping("/prepareSaveConfig")
     public ResponseEntity<?> prepareSaveConfig(

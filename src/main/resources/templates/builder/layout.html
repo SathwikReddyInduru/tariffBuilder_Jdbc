@@ -99,10 +99,16 @@
                         <span th:text="${activeStep == 0} ? 'Approver' : 'Builder'">Builder</span>
                         | <span th:text="${username != null ? username : 'user'}">user</span>
                     </div>
-                    <input type="text" placeholder="Name..." class="config-name" id="configName">
+                    <div style="display:flex; align-items:center; gap:12px; margin-left:auto;">
+                        <input type="text" placeholder="Name..." class="config-name" id="configName">
+                        <span class="material-icons reset-btn" id="resetBtn" onclick="resetBuilder()"
+                            title="Reset builder" th:classappend="${activeStep == 0} ? ' hidden'">
+                            restart_alt
+                        </span>
+                    </div>
                 </div>
             </header>
-
+                        
             <th:block th:replace="${stageFrag}"></th:block>
 
             <!-- FOOTER ACTIONS -->

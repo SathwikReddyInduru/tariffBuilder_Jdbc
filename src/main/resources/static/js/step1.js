@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const typeCard = document.getElementById('card-' + savedType);
         if (typeCard) {
             // Mark as selected
-            document.querySelectorAll('#typeSection .type-card').forEach(c => 
+            document.querySelectorAll('#typeSection .type-card').forEach(c =>
                 c.classList.remove('selected')
             );
             typeCard.classList.add('selected');
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (savedSubType && savedType) {
         const subCard = document.getElementById('card-' + savedSubType);
         if (subCard) {
-            document.querySelectorAll('#subTypeSection .type-card').forEach(c => 
+            document.querySelectorAll('#subTypeSection .type-card').forEach(c =>
                 c.classList.remove('selected')
             );
             subCard.classList.add('selected');
@@ -37,7 +37,7 @@ function selectType(type) {
     sessionStorage.setItem('pkgType', type);
 
     // Clear previous selection
-    document.querySelectorAll('#typeSection .type-card').forEach(c => 
+    document.querySelectorAll('#typeSection .type-card').forEach(c =>
         c.classList.remove('selected')
     );
     document.getElementById('card-' + type).classList.add('selected');
@@ -48,7 +48,7 @@ function selectType(type) {
     subGroup.style.pointerEvents = 'auto';
 
     // Reset subtype when changing billing type
-    document.querySelectorAll('#subTypeSection .type-card').forEach(c => 
+    document.querySelectorAll('#subTypeSection .type-card').forEach(c =>
         c.classList.remove('selected')
     );
     sessionStorage.removeItem('pkgSubType');
@@ -57,12 +57,13 @@ function selectType(type) {
 function selectSubType(subType) {
     sessionStorage.setItem('pkgSubType', subType);
 
-    document.querySelectorAll('#subTypeSection .type-card').forEach(c => 
+    document.querySelectorAll('#subTypeSection .type-card').forEach(c =>
         c.classList.remove('selected')
     );
     document.getElementById('card-' + subType).classList.add('selected');
 
     setTimeout(() => {
-        window.location.href = '/builder/step2';
+        window.isInternalNavigation = true;
+        window.location.href = "/builder/step2";
     }, 300);
 }

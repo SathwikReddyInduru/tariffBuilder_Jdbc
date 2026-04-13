@@ -1,3 +1,135 @@
+window.addEventListener("pageshow", () => {
+    window.isInternalNavigation = false;
+});
+
+window.isInternalNavigation = false;
+
+function saveDraftOnExit() {
+    if (window.isInternalNavigation) return;
+
+    const isBuilderPage = window.location.pathname.startsWith('/builder/step');
+    if (!isBuilderPage) return;
+
+    const state = JSON.parse(sessionStorage.getItem('state') || '{}');
+    const configName = sessionStorage.getItem('configName');
+    const pkgType = sessionStorage.getItem('pkgType');
+
+    const hasData = pkgType || configName ||
+        state?.s2?.length || state?.s3?.length || state?.s4?.length;
+
+    if (!hasData) return;
+
+    const now = new Date();
+    const savedOn = now.toLocaleDateString('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric'
+    });
+    const savedTime = now.toLocaleTimeString('en-GB', {
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    const payload = JSON.stringify({
+        name: configName || 'Untitled Draft',
+        pkgType,
+        pkgSubType: sessionStorage.getItem('pkgSubType'),
+        savedOn,
+        savedTime,
+        selectedSvcs_s2: sessionStorage.getItem('selectedSvcs_s2'),
+        selectedSvcs_s3: sessionStorage.getItem('selectedSvcs_s3'),
+        selectedSvcs_s4: sessionStorage.getItem('selectedSvcs_s4'),
+        state
+    });
+
+    navigator.sendBeacon('/draft/save', new Blob([payload], { type: 'application/json' }));
+}
+
+window.addEventListener("beforeunload", saveDraftOnExit);
+
+async function loadDrafts() {
+    const container = document.getElementById('comp-list');
+    container.innerHTML = '<p class="sidebar-text">Loading...</p>';
+
+    try {
+        const res = await fetch('/draft/list');
+        const drafts = await res.json();
+
+        if (!drafts.length) {
+            container.innerHTML = `<div class="empty-state">
+                <span class="material-icons empty-icon">drafts</span>
+                <p>No drafts found</p>
+            </div>`;
+            return;
+        }
+
+        window.ALL_DRAFTS = drafts;
+
+        container.innerHTML = drafts.map((d, i) => `
+            <div class="draft-item">
+                <div class="draft-info" onclick="loadDraft(${i})">
+                    <span class="material-icons draft-icon">description</span>
+                    <div class="draft-text">
+                        <span class="draft-name">${d.name || 'Untitled'}</span>
+                        <span class="draft-meta">${d.savedOn || '—'} · ${d.savedTime || ''}</span>
+                    </div>
+                </div>
+                <span class="material-icons draft-delete" onclick="deleteDraft(${i}, event)">delete_outline</span>
+            </div>
+        `).join('');
+
+    } catch (err) {
+        container.innerHTML = '<p class="sidebar-text">Error loading drafts</p>';
+    }
+}
+
+function loadDraft(index) {
+    const draft = window.ALL_DRAFTS[index];
+
+    sessionStorage.setItem('state', JSON.stringify(draft.state || {}));
+    sessionStorage.setItem('configName', draft.name || '');
+    sessionStorage.setItem('pkgType', draft.pkgType || '');
+    sessionStorage.setItem('pkgSubType', draft.pkgSubType || '');
+
+    // ← restore actual saved svc selections so pills + sidebar reload correctly
+    sessionStorage.setItem('selectedSvcs_s2', draft.selectedSvcs_s2 || '[]');
+    sessionStorage.setItem('selectedSvcs_s3', draft.selectedSvcs_s3 || '[]');
+    sessionStorage.setItem('selectedSvcs_s4', draft.selectedSvcs_s4 || '[]');
+
+    window.isInternalNavigation = true;
+    window.location.href = '/builder/step1';
+}
+
+async function deleteDraft(index, e) {
+    e.stopPropagation();
+    const draft = window.ALL_DRAFTS[index];
+    if (!confirm(`Delete draft "${draft.name}"?`)) return;
+
+    await fetch('/draft/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...draft, _delete: true })
+    });
+
+    loadDrafts();
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const container = document.getElementById("comp-list");
+
+        if (tab.textContent === 'DRAFTS') {
+            loadDrafts();
+        } else {
+            // ✅ CLEAR drafts + reload library
+            container.innerHTML = '';
+
+            loadLibrary(); // ← your existing function (important)
+        }
+    });
+});
+
 function applyPrivilege() {
 
     const builderNode = document.getElementById('mn-builder');
@@ -22,6 +154,13 @@ window.addEventListener('DOMContentLoaded', () => {
     applyPrivilege();
     restoreActiveModule();
     restoreConfigName();
+
+    // mark all step navigation as internal so draft save is skipped
+    document.querySelectorAll('.step-node, .main-node').forEach(link => {
+        link.addEventListener('click', () => {
+            window.isInternalNavigation = true;
+        });
+    });
 });
 
 // ── Restore active module based on current URL ──
@@ -46,8 +185,10 @@ function restoreActiveModule() {
 
     // FIRST LOAD DECISION
     if (!hasBuilder && hasApprover) {
+        window.isInternalNavigation = true;
         window.location.href = "/builder/admin";
     } else if (hasBuilder) {
+        window.isInternalNavigation = true;
         window.location.href = "/builder/step1";
     }
 }
@@ -129,6 +270,25 @@ function restoreConfigName() {
     });
 }
 
+function resetBuilder() {
+    const state = JSON.parse(sessionStorage.getItem('state') || '{}');
+    const pkgType = sessionStorage.getItem('pkgType');
+    const configName = sessionStorage.getItem('configName');
+
+    const isEmpty = !pkgType && !configName &&
+        !state.s2?.length && !state.s3?.length && !state.s4?.length;
+
+    if (isEmpty) {
+        alert('Nothing to reset — Builder is already empty.');
+        return;
+    }
+
+    if (!confirm('Reset all selections and start over?')) return;
+    clearBuilderSession();
+    window.isInternalNavigation = true;
+    window.location.href = '/builder/step1';
+}
+
 // ═══════════════════════════════════════════════════════
 //  STEP ACCESS GUARD
 // ═══════════════════════════════════════════════════════
@@ -165,7 +325,7 @@ function toggleUserMenu() {
     dropdown.classList.toggle("active");
 }
 
-document.addEventListener("click", function(e) {
+document.addEventListener("click", function (e) {
     const menu = document.querySelector(".user-menu");
     if (menu && !menu.contains(e.target)) {
         const dd = document.getElementById("userDropdown");
@@ -187,7 +347,7 @@ async function saveConfiguration() {
 
     const state = JSON.parse(sessionStorage.getItem("state"));
 
-    if (!state ?.s2 ?.length) {
+    if (!state?.s2?.length) {
         alert("Step 2 required");
         return;
     }
@@ -199,7 +359,7 @@ async function saveConfiguration() {
         if (!dateStr) return "12/31/2030";
 
         const [year, month, day] =
-        dateStr.split("-");
+            dateStr.split("-");
 
         return `${month}/${day}/${year}`;
     }
@@ -306,6 +466,8 @@ async function saveConfiguration() {
         alert("Configuration Prepared (JSON stored)");
 
         clearBuilderSession();
+
+        window.isInternalNavigation = true;
 
         window.location.href =
             "/builder/step1";

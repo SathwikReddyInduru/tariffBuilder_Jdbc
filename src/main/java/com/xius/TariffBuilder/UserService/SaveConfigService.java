@@ -1,5 +1,9 @@
 package com.xius.TariffBuilder.UserService;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -7,6 +11,8 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xius.TariffBuilder.Entity.SaveConfigDao;
 import com.xius.TariffBuilder.util.JsonStorage;
 
@@ -162,5 +168,42 @@ public class SaveConfigService {
 		response.put("tpName", tpName);
 
 		return response;
+	}
+
+	public void saveDraft(Map<String, Object> draft, String username) {
+
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+
+			Path path = Paths.get("drafts", username + ".json");
+
+			Files.createDirectories(path.getParent());
+
+			List<Map<String, Object>> drafts = new ArrayList<>();
+
+			if (Files.exists(path) && Files.size(path) > 0) {
+				drafts = mapper.readValue(
+						path.toFile(),
+						new TypeReference<List<Map<String, Object>>>() {
+						});
+			}
+
+			drafts.removeIf(d -> d.get("name").equals(draft.get("name")));
+			// add this before drafts.add(draft)
+			boolean shouldDelete = Boolean.TRUE.equals(draft.get("_delete"));
+			drafts.removeIf(d -> d.get("name").equals(draft.get("name")));
+			if (shouldDelete) {
+				mapper.writerWithDefaultPrettyPrinter().writeValue(path.toFile(), drafts);
+				return;
+			}
+			drafts.add(draft);
+
+			mapper.writerWithDefaultPrettyPrinter()
+					.writeValue(path.toFile(), drafts);
+
+		} catch (Exception e) {
+			System.out.println("❌ ERROR SAVING DRAFT");
+			e.printStackTrace();
+		}
 	}
 }

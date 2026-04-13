@@ -1,53 +1,125 @@
 {
-  "TP_2" : {
-    "tpName" : "TP_2",
-    "username" : "USER1",
-    "networkId" : 16,
-    "data" : {
-      "username" : "USER1",
-      "submittedOn" : "10 Apr 2026",
-      "packageType" : "POSTPAID",
-      "tariffPackCategory" : "COMMERCIAL",
-      "tariffPackageDesc" : "TP_2",
-      "charge" : "299",
-      "endDate" : "04/30/2026",
-      "publicityId" : "pub1",
-      "chargeId" : "TP_2_PR",
-      "isCorporateYn" : false,
-      "tariffPlanId" : 1743,
-      "tariffPlanName" : "MI MUNDO S_V",
-      "defaultAtps" : [ {
-        "servicePackageId" : 1742,
-        "chargeId" : "TP_2_PR",
-        "packageName" : "MI MUNDO S_SMS",
-        "validity" : "Monthly",
-        "midnightExpiry" : "No",
-        "renewal" : "No",
-        "rental" : 0,
-        "maxCount" : 0,
-        "freeCycles" : "0"
-      } ],
-      "additionalAtps" : [ {
-        "servicePackageId" : 1746,
-        "chargeId" : "TP_2_PR",
-        "packageName" : "MI MUNDO S_D",
-        "validity" : "Weekly",
-        "midnightExpiry" : "Yes",
-        "renewal" : "Yes",
-        "rental" : 0,
-        "maxCount" : 0,
-        "freeCycles" : "0"
-      }, {
-        "servicePackageId" : 1765,
-        "chargeId" : "TP_2_PR",
-        "packageName" : "DYNAMIC_DATP",
-        "validity" : "Monthly",
-        "midnightExpiry" : "No",
-        "renewal" : "No",
-        "rental" : 0,
-        "maxCount" : 0,
-        "freeCycles" : "0"
-      } ]
+  "TP_2": {
+    "tpName": "TP_2",
+    "username": "USER1",
+    "networkId": 16,
+    "data": {
+      "username": "USER1",
+      "submittedOn": "10 Apr 2026",
+      "packageType": "POSTPAID",
+      "tariffPackCategory": "COMMERCIAL",
+      "tariffPackageDesc": "TP_2",
+      "charge": "299",
+      "endDate": "04/30/2026",
+      "publicityId": "pub1",
+      "chargeId": "TP_2_PR",
+      "isCorporateYn": false,
+      "tariffPlanId": 1743,
+      "tariffPlanName": "MI MUNDO S_V",
+      "defaultAtps": [
+        {
+          "servicePackageId": 1742,
+          "chargeId": "TP_2_PR",
+          "packageName": "MI MUNDO S_SMS",
+          "validity": "Monthly",
+          "midnightExpiry": "No",
+          "renewal": "No",
+          "rental": 0,
+          "maxCount": 0,
+          "freeCycles": "0"
+        }
+      ],
+      "additionalAtps": [
+        {
+          "servicePackageId": 1746,
+          "chargeId": "TP_2_PR",
+          "packageName": "MI MUNDO S_D",
+          "validity": "Weekly",
+          "midnightExpiry": "Yes",
+          "renewal": "Yes",
+          "rental": 0,
+          "maxCount": 0,
+          "freeCycles": "0"
+        },
+        {
+          "servicePackageId": 1765,
+          "chargeId": "TP_2_PR",
+          "packageName": "DYNAMIC_DATP",
+          "validity": "Monthly",
+          "midnightExpiry": "No",
+          "renewal": "No",
+          "rental": 0,
+          "maxCount": 0,
+          "freeCycles": "0"
+        }
+      ]
+    }
+  },
+  "murali": {
+    "tpName": "murali",
+    "username": "USER1",
+    "networkId": 16,
+    "data": {
+      "username": "USER1",
+      "submittedOn": "13 Apr 2026",
+      "packageType": "POSTPAID",
+      "tariffPackCategory": "COMMERCIAL",
+      "tariffPackageDesc": "murali",
+      "charge": "299",
+      "endDate": "04/30/2026",
+      "publicityId": "pub21",
+      "chargeId": "murali_PR",
+      "isCorporateYn": false,
+      "tariffPlanId": 1743,
+      "tariffPlanName": "MI MUNDO S_V",
+      "defaultAtps": [
+        {
+          "servicePackageId": 1742,
+          "chargeId": "murali_PR",
+          "packageName": "MI MUNDO S_SMS",
+          "validity": "Monthly",
+          "midnightExpiry": "No",
+          "renewal": "No",
+          "rental": 0,
+          "maxCount": 0,
+          "freeCycles": "0"
+        }
+      ],
+      "additionalAtps": [
+        {
+          "servicePackageId": 1746,
+          "chargeId": "murali_PR",
+          "packageName": "MI MUNDO S_D",
+          "validity": "Monthly",
+          "midnightExpiry": "No",
+          "renewal": "No",
+          "rental": 0,
+          "maxCount": 0,
+          "freeCycles": "0"
+        },
+        {
+          "servicePackageId": 1746,
+          "chargeId": "murali_PR",
+          "packageName": "MI MUNDO S_D",
+          "validity": "Monthly",
+          "midnightExpiry": "No",
+          "renewal": "No",
+          "rental": 0,
+          "maxCount": 0,
+          "freeCycles": "0"
+        },
+        {
+          "servicePackageId": 1746,
+          "chargeId": "murali_PR",
+          "packageName": "MI MUNDO S_D",
+          "validity": "Monthly",
+          "midnightExpiry": "No",
+          "renewal": "No",
+          "rental": 0,
+          "maxCount": 0,
+          "freeCycles": "0"
+        }
+      ]
     }
   }
 }
