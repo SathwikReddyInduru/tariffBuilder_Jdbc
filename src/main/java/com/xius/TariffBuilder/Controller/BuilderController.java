@@ -339,7 +339,7 @@ public class BuilderController {
 
         Map<String, Object> response = saveConfigService.prepareConfig(request, username, networkId);
 
-        logger.info("Prepare config completed");
+        logger.info("Prepare config completed response={}", response);
 
         return ResponseEntity.ok(response);
     }
@@ -430,6 +430,8 @@ public class BuilderController {
     public Map<String, Object> approve(
             @PathVariable String tpName) {
 
+        logger.info("Approve request for tpName={}", tpName);
+
         return tariffApprovalService.approve(tpName);
     }
 
@@ -437,6 +439,8 @@ public class BuilderController {
     @PostMapping("/reject/{tpName}")
     public Map<String, Object> reject(
             @PathVariable String tpName) {
+
+        logger.info("Reject request for tpName={}", tpName);
 
         tariffApprovalService.reject(tpName);
 
@@ -451,7 +455,10 @@ public class BuilderController {
             @RequestBody(required = false) String draftJson,
             HttpSession session) {
 
+        logger.info("Draft save API called username={}", session.getAttribute("username"));
+
         if (draftJson == null || draftJson.isBlank()) {
+            logger.warn("Empty draft received");
             return ResponseEntity.ok().build();
         }
 
@@ -468,7 +475,8 @@ public class BuilderController {
             saveConfigService.saveDraft(draft, username);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error while saving draft username={} error={}",
+                    session.getAttribute("username"), e.getMessage(), e);
         }
 
         return ResponseEntity.ok().build();
@@ -484,18 +492,25 @@ public class BuilderController {
             username = "guest";
         }
 
+        logger.info("Fetching drafts for user={}", username);
+
         try {
             Path path = Paths.get("drafts", username + ".json");
 
             if (!Files.exists(path))
                 return new ArrayList<>();
 
-            return new ObjectMapper().readValue(
+            List<Map<String, Object>> result = new ObjectMapper().readValue(
                     path.toFile(),
                     new TypeReference<List<Map<String, Object>>>() {
                     });
 
+            logger.info("Drafts fetched count={} user={}", result.size(), username);
+
+            return result;
+
         } catch (Exception e) {
+            logger.error("Error fetching drafts user={} error={}", username, e.getMessage(), e);
             return new ArrayList<>();
         }
     }

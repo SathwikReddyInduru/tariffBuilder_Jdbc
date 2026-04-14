@@ -120,15 +120,19 @@ document.querySelectorAll('.tab').forEach(tab => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
 
-        const container = document.getElementById("comp-list");
+        const container = document.getElementById('comp-list');
 
-        if (tab.textContent === 'DRAFTS') {
+        if (tab.textContent.trim() === 'DRAFTS') {
+            // stash current library HTML before overwriting
+            window._libraryCache = container.innerHTML;
             loadDrafts();
         } else {
-            // ✅ CLEAR drafts + reload library
-            container.innerHTML = '';
-
-            loadLibrary(); // ← your existing function (important)
+            // restore library content
+            if (window._libraryCache !== undefined) {
+                container.innerHTML = window._libraryCache;
+            } else if (typeof refreshSidebar === 'function') {
+                refreshSidebar();
+            }
         }
     });
 });
