@@ -180,7 +180,7 @@ public class SaveConfigService {
 				mapper.writerWithDefaultPrettyPrinter().writeValue(path.toFile(), drafts);
 				return;
 			}
-			drafts.add(draft);
+			drafts.add(0, draft);
 
 			mapper.writerWithDefaultPrettyPrinter()
 					.writeValue(path.toFile(), drafts);

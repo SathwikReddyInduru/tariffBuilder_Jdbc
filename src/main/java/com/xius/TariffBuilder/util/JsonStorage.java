@@ -15,44 +15,36 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Component
 public class JsonStorage {
 
-	private static final Logger logger =
-			LoggerFactory.getLogger(JsonStorage.class);
+	private static final Logger logger = LoggerFactory.getLogger(JsonStorage.class);
 
-	private final ObjectMapper mapper =
-			new ObjectMapper();
+	private final ObjectMapper mapper = new ObjectMapper();
 
-	private final String FILE_PATH =
-			"json-storage/tariff-config.json";
-
-
+	private final String FILE_PATH = "json-storage/tariff-config.json";
 
 	/*
-	check if tp exists
-	*/
+	 * check if tp exists
+	 */
 	public boolean exists(String tpName) {
 
 		logger.debug(
 				"Checking JSON existence for tpName={}",
-				tpName
-		);
+				tpName);
 
 		try {
 
-			File file =
-					new File(FILE_PATH);
+			File file = new File(FILE_PATH);
 
 			if (!file.exists() || file.length() == 0) {
 
 				return false;
 			}
 
-			Map<String, Object> json =
-					mapper.readValue(
+			Map<String, Object> json = mapper.readValue(
 
-							file,
+					file,
 
-							new TypeReference<Map<String, Object>>() {}
-					);
+					new TypeReference<Map<String, Object>>() {
+					});
 
 			return json.containsKey(tpName);
 		}
@@ -61,18 +53,15 @@ public class JsonStorage {
 
 			logger.error(
 					"exists error",
-					e
-			);
+					e);
 
 			return false;
 		}
 	}
 
-
-
 	/*
-	store request json
-	*/
+	 * store request json
+	 */
 	public void store(
 
 			String tpName,
@@ -85,75 +74,57 @@ public class JsonStorage {
 
 		logger.info(
 				"Storing JSON tpName={}",
-				tpName
-		);
+				tpName);
 
 		try {
 
-			File file =
-					new File(FILE_PATH);
+			File file = new File(FILE_PATH);
 
 			file.getParentFile().mkdirs();
 
-
-			Map<String, Object> json =
-					new LinkedHashMap<>();
-
+			Map<String, Object> json = new LinkedHashMap<>();
 
 			if (file.exists() && file.length() > 0) {
 
-				json =
-						mapper.readValue(
+				json = mapper.readValue(
 
-								file,
+						file,
 
-								new TypeReference<Map<String, Object>>() {}
-						);
+						new TypeReference<Map<String, Object>>() {
+						});
 			}
 
-
-			Map<String, Object> tpData =
-					new LinkedHashMap<>();
-
+			Map<String, Object> tpData = new LinkedHashMap<>();
 
 			tpData.put(
 					"tpName",
-					tpName
-			);
+					tpName);
 
 			tpData.put(
 					"username",
-					username
-			);
+					username);
 
 			tpData.put(
 					"networkId",
-					networkId
-			);
+					networkId);
 
 			tpData.put(
 					"data",
-					request
-			);
-
+					request);
 
 			json.put(
 					tpName,
-					tpData
-			);
-
+					tpData);
 
 			mapper
-			.writerWithDefaultPrettyPrinter()
-			.writeValue(
-					file,
-					json
-			);
+					.writerWithDefaultPrettyPrinter()
+					.writeValue(
+							file,
+							json);
 
 			logger.info(
 					"JSON stored {}",
-					tpName
-			);
+					tpName);
 
 		}
 
@@ -161,35 +132,30 @@ public class JsonStorage {
 
 			logger.error(
 					"store error",
-					e
-			);
+					e);
 		}
 	}
 
-
-
 	/*
-	get all tp names
-	*/
+	 * get all tp names
+	 */
 	public Set<String> getAllTpNames() {
 
 		try {
 
-			File file =
-					new File(FILE_PATH);
+			File file = new File(FILE_PATH);
 
 			if (!file.exists() || file.length() == 0) {
 
 				return Set.of();
 			}
 
-			Map<String, Object> json =
-					mapper.readValue(
+			Map<String, Object> json = mapper.readValue(
 
-							file,
+					file,
 
-							new TypeReference<Map<String, Object>>() {}
-					);
+					new TypeReference<Map<String, Object>>() {
+					});
 
 			return json.keySet();
 		}
@@ -198,42 +164,36 @@ public class JsonStorage {
 
 			logger.error(
 					"getAllTpNames error",
-					e
-			);
+					e);
 
 			return Set.of();
 		}
 	}
 
-
-
 	/*
-	get single tp json
-	*/
+	 * get single tp json
+	 */
 	public Object getTpData(String tpName) {
 
 		logger.info(
 				"Fetching JSON for {}",
-				tpName
-		);
+				tpName);
 
 		try {
 
-			File file =
-					new File(FILE_PATH);
+			File file = new File(FILE_PATH);
 
 			if (!file.exists() || file.length() == 0) {
 
 				return null;
 			}
 
-			Map<String, Object> json =
-					mapper.readValue(
+			Map<String, Object> json = mapper.readValue(
 
-							file,
+					file,
 
-							new TypeReference<Map<String, Object>>() {}
-					);
+					new TypeReference<Map<String, Object>>() {
+					});
 
 			return json.get(tpName);
 		}
@@ -242,26 +202,22 @@ public class JsonStorage {
 
 			logger.error(
 					"getTpData error",
-					e
-			);
+					e);
 
 			return null;
 		}
 	}
 
-
-
 	/*
-	read full json file
-	*/
-	public Map<String,Object> readAll(){
+	 * read full json file
+	 */
+	public Map<String, Object> readAll() {
 
-		try{
+		try {
 
-			File file =
-					new File(FILE_PATH);
+			File file = new File(FILE_PATH);
 
-			if(!file.exists() || file.length()==0){
+			if (!file.exists() || file.length() == 0) {
 
 				return new LinkedHashMap<>();
 			}
@@ -270,101 +226,114 @@ public class JsonStorage {
 
 					file,
 
-					new TypeReference<Map<String,Object>>() {}
-			);
+					new TypeReference<Map<String, Object>>() {
+					});
 		}
 
-		catch(Exception e){
+		catch (Exception e) {
 
 			logger.error(
 					"readAll error",
-					e
-			);
+					e);
 
 			return new LinkedHashMap<>();
 		}
 	}
 
-
-
 	/*
-	write full json file
-	*/
+	 * write full json file
+	 */
 	public void writeAll(
 
-			Map<String,Object> json){
+			Map<String, Object> json) {
 
-		try{
+		try {
 
-			File file =
-					new File(FILE_PATH);
+			File file = new File(FILE_PATH);
 
 			mapper
-			.writerWithDefaultPrettyPrinter()
-			.writeValue(
-					file,
-					json
-			);
+					.writerWithDefaultPrettyPrinter()
+					.writeValue(
+							file,
+							json);
 
 			logger.info(
-					"json updated"
-			);
+					"json updated");
 		}
 
-		catch(Exception e){
+		catch (Exception e) {
 
 			logger.error(
 					"writeAll error",
-					e
-			);
+					e);
 		}
 	}
 
-
-
 	/*
-	remove tp after approve/reject
-	*/
+	 * remove tp after approve/reject
+	 */
 	public void remove(
 
-			String tpName){
+			String tpName) {
 
-		try{
+		try {
 
-			Map<String,Object> json =
-					readAll();
-
+			Map<String, Object> json = readAll();
 
 			json.remove(tpName);
 
-
 			writeAll(json);
-
 
 			logger.info(
 					"json removed {}",
-					tpName
-			);
+					tpName);
 
 		}
 
-		catch(Exception e){
+		catch (Exception e) {
 
 			logger.error(
 					"remove error",
-					e
-			);
+					e);
 		}
 	}
 
-
-
 	/*
-	get full json map
-	*/
-	public Map<String,Object> getAll(){
+	 * get full json map
+	 */
+	public Map<String, Object> getAll() {
 
 		return readAll();
+	}
+
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getByUser(String username) {
+
+		Map<String, Object> all = readAll();
+
+		Map<String, Object> result = new LinkedHashMap<>();
+
+		for (Map.Entry<String, Object> entry : all.entrySet()) {
+
+			Object value = entry.getValue();
+
+			if (value instanceof Map) {
+
+				Map<String, Object> tp = (Map<String, Object>) value;
+
+				Object storedUser = tp.get("username");
+
+				if (storedUser != null
+						&& storedUser.toString().equals(username)) {
+
+					result.put(
+							entry.getKey(),
+							tp);
+				}
+			}
+		}
+
+		return result;
 	}
 
 }

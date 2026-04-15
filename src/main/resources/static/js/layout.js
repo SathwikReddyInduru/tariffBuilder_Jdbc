@@ -44,43 +44,83 @@ function saveDraftOnExit() {
 
 window.addEventListener("beforeunload", saveDraftOnExit);
 
-async function loadDrafts() {
-    const container = document.getElementById('comp-list');
+function openDrafts() {
+    const overlay = document.getElementById('draftOverlay');
+
+    // Step 1: make it display:block but panel still off-screen (no 'active' yet)
+    overlay.style.display = 'block';
+
+    // Step 2: double rAF so browser paints the display:block frame first,
+    // then adds 'active' — this lets the CSS transition actually animate
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            overlay.classList.add('active');
+        });
+    });
+
+    loadDrafts('draftOverlayList');
+}
+
+function closeDrafts() {
+    const overlay = document.getElementById('draftOverlay');
+    overlay.classList.remove('active');
+
+    // Hide after slide-out transition completes
+    overlay.addEventListener('transitionend', function handler() {
+        if (!overlay.classList.contains('active')) {
+            overlay.style.display = 'none';
+        }
+        overlay.removeEventListener('transitionend', handler);
+    });
+}
+
+document.addEventListener('click', function (e) {
+    if (e.target.id === 'draftOverlay') {
+        closeDrafts();
+    }
+});
+
+function loadDrafts(targetId = 'comp-list') {
+
+    const container = document.getElementById(targetId);
     container.innerHTML = '<p class="sidebar-text">Loading...</p>';
 
-    try {
-        const res = await fetch('/draft/list');
-        const drafts = await res.json();
+    fetch('/draft/list')
+        .then(res => res.json())
+        .then(drafts => {
 
-        if (!drafts.length) {
-            container.innerHTML = `
-                <div class="drafts-empty">
-                    <span class="material-icons">edit_note</span>
-                    <p class="drafts-empty-title">No drafts yet</p>
-                    <p class="drafts-empty-sub">Your in-progress packages will appear here when you leave a step</p>
-                </div>
-            `;
-            return;
-        }
-
-        window.ALL_DRAFTS = drafts;
-
-        container.innerHTML = drafts.map((d, i) => `
-            <div class="draft-item">
-                <div class="draft-info" onclick="loadDraft(${i})">
-                    <span class="material-icons draft-icon">description</span>
-                    <div class="draft-text">
-                        <span class="draft-name">${d.name || 'Untitled'}</span>
-                        <span class="draft-meta">${d.savedOn || '—'} · ${d.savedTime || ''}</span>
+            if (!drafts.length) {
+                container.innerHTML = `
+                    <div class="drafts-empty">
+                        <span class="material-icons">edit_note</span>
+                        <p class="drafts-empty-title">No drafts yet</p>
+                        <p class="drafts-empty-sub">
+                            Your in-progress packages will appear here
+                        </p>
                     </div>
-                </div>
-                <span class="material-icons draft-delete" onclick="deleteDraft(${i}, event)">delete_outline</span>
-            </div>
-        `).join('');
+                `;
+                return;
+            }
 
-    } catch (err) {
-        container.innerHTML = '<p class="sidebar-text">Error loading drafts</p>';
-    }
+            window.ALL_DRAFTS = drafts;
+
+            container.innerHTML = drafts.map((d, i) => `
+                <div class="draft-item" style="--i:${i}">
+                    <div class="draft-info" onclick="loadDraft(${i})">
+                        <span class="material-icons draft-icon">description</span>
+                        <div class="draft-text">
+                            <span class="draft-name">${d.name || 'Untitled'}</span>
+                            <span class="draft-meta">${d.savedOn} · ${d.savedTime}</span>
+                        </div>
+                    </div>
+                    <span class="material-icons draft-delete"
+                          onclick="deleteDraft(${i}, event)">delete_outline</span>
+                </div>
+            `).join('');
+        })
+        .catch(() => {
+            container.innerHTML = '<p class="sidebar-text">Error loading drafts</p>';
+        });
 }
 
 function loadDraft(index) {
@@ -111,31 +151,103 @@ async function deleteDraft(index, e) {
         body: JSON.stringify({ ...draft, _delete: true })
     });
 
-    loadDrafts();
+    // Remove from in-memory array and re-render without a network round-trip
+    window.ALL_DRAFTS.splice(index, 1);
+
+    // Determine which container is currently active
+    const overlayOpen = document.getElementById('draftOverlay')?.classList.contains('active');
+    const targetId = overlayOpen ? 'draftOverlayList' : 'comp-list';
+
+    if (!window.ALL_DRAFTS.length) {
+        document.getElementById(targetId).innerHTML = `
+            <div class="drafts-empty">
+                <span class="material-icons">edit_note</span>
+                <p class="drafts-empty-title">No drafts yet</p>
+                <p class="drafts-empty-sub">Your in-progress packages will appear here</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Re-render with corrected indices
+    document.getElementById(targetId).innerHTML = window.ALL_DRAFTS.map((d, i) => `
+        <div class="draft-item" style="--i:${i}">
+            <div class="draft-info" onclick="loadDraft(${i})">
+                <span class="material-icons draft-icon">description</span>
+                <div class="draft-text">
+                    <span class="draft-name">${d.name || 'Untitled'}</span>
+                    <span class="draft-meta">${d.savedOn} · ${d.savedTime}</span>
+                </div>
+            </div>
+            <span class="material-icons draft-delete"
+                  onclick="deleteDraft(${i}, event)">delete_outline</span>
+        </div>
+    `).join('');
 }
 
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
+function manualSaveDraft() {
+    const state = JSON.parse(sessionStorage.getItem('state') || '{}');
 
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
+    const configName = sessionStorage.getItem('configName');
 
-        const container = document.getElementById('comp-list');
+    const pkgType = sessionStorage.getItem('pkgType');
+    const hasData = pkgType || configName ||
 
-        if (tab.textContent.trim() === 'DRAFTS') {
-            // stash current library HTML before overwriting
-            window._libraryCache = container.innerHTML;
-            loadDrafts();
-        } else {
-            // restore library content
-            if (window._libraryCache !== undefined) {
-                container.innerHTML = window._libraryCache;
-            } else if (typeof refreshSidebar === 'function') {
-                refreshSidebar();
-            }
-        }
+        state?.s2?.length || state?.s3?.length || state?.s4?.length;
+
+    if (!hasData) {
+        alert("Nothing to save as draft");
+        return;
+    }
+    if (!configName) {
+        alert("Please enter config Name to save");
+        return;
+    }
+    const now = new Date();
+
+    const savedOn = now.toLocaleDateString('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric'
     });
-});
+
+    const savedTime = now.toLocaleTimeString('en-GB', {
+        hour: '2-digit', minute: '2-digit'
+    });
+    const payload = {
+
+        name: configName,
+
+        pkgType,
+
+        pkgSubType: sessionStorage.getItem('pkgSubType'),
+
+        savedOn,
+
+        savedTime,
+
+        selectedSvcs_s2: sessionStorage.getItem('selectedSvcs_s2'),
+
+        selectedSvcs_s3: sessionStorage.getItem('selectedSvcs_s3'),
+
+        selectedSvcs_s4: sessionStorage.getItem('selectedSvcs_s4'),
+
+        state
+
+    };
+    fetch('/draft/save', {
+
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+
+    })
+        .then(() => {
+            alert("Draft saved successfully ✅");
+        })
+
+        .catch(() => {
+            alert("Failed to save draft ❌");
+        });
+}
 
 function applyPrivilege() {
 
@@ -177,10 +289,6 @@ async function checkDraftsOnLogin() {
             tabs[0]?.classList.add('active');
             return;
         }
-
-        // switch to Drafts tab
-        tabs.forEach(t => t.classList.remove('active'));
-        tabs[1]?.classList.add('active');
 
         // render drafts
         window.ALL_DRAFTS = drafts;
@@ -254,6 +362,17 @@ function activateModule(module, el) {
     if (module === 'builder' && !hasBuilder) return false;
     if (module === 'approver' && !hasApprover) return false;
 
+    // RESTORE LIBRARY when switching back
+    if (module === 'builder') {
+        const container = document.getElementById('comp-list');
+
+        if (window._libraryCache !== undefined) {
+            container.innerHTML = window._libraryCache;
+        } else if (typeof refreshSidebar === 'function') {
+            refreshSidebar();
+        }
+    }
+
     setModuleUI(module);
     return true;
 }
@@ -271,11 +390,26 @@ function setModuleUI(module) {
     if (approverNode) approverNode.classList.toggle('active', module === 'approver');
 
     if (module === 'builder') {
-        // Show step rail + sidebar
+        // Show step rail always for builder
         if (stepRail) stepRail.classList.remove('collapsed');
-        if (sidebar) sidebar.classList.remove('collapsed');
         if (footerActions) footerActions.style.display = 'flex';
         if (configInput) configInput.style.display = 'block';
+
+        // Sidebar visible only on steps 2, 3, 4
+        const step = getActiveStep();
+        if (sidebar) {
+            if (step === 2 || step === 3 || step === 4) {
+                sidebar.classList.remove('collapsed');
+                // Ensure search bar is present once sidebar is visible
+                requestAnimationFrame(() => initLibrarySearch());
+            } else {
+                sidebar.classList.add('collapsed');
+            }
+        }
+
+        // Hierarchy button visible only on step 5
+        applyHierarchyButtonVisibility(step);
+
     } else {
         // Approver — collapse step rail + sidebar (they're irrelevant)
         if (stepRail) stepRail.classList.add('collapsed');
@@ -285,9 +419,177 @@ function setModuleUI(module) {
     }
 }
 
+// Returns the current active step number (1-5) from the URL, or 0 for non-step pages
+function getActiveStep() {
+    const match = window.location.pathname.match(/step(\d)/);
+    return match ? parseInt(match[1], 10) : 0;
+}
+
+// Shows/hides the Hierarchy button — only visible on step 5
+function applyHierarchyButtonVisibility(step) {
+    // The Hierarchy button is the first btn-secondary in footerActions
+    const hierarchyBtn = document.querySelector('#footerActions .btn-secondary');
+    if (hierarchyBtn) {
+        hierarchyBtn.style.display = (step === 5) ? 'inline-flex' : 'none';
+    }
+}
+
 // ═══════════════════════════════════════════════════════
-//  STATE HELPERS
+//  LIBRARY SEARCH
 // ═══════════════════════════════════════════════════════
+
+// Call this once the sidebar is populated (from step JS after loadLibrary/refreshSidebar)
+function initLibrarySearch() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+
+    // Don't inject twice
+    if (document.getElementById('librarySearchInput')) return;
+
+    const searchWrapper = document.createElement('div');
+    searchWrapper.id = 'librarySearchWrapper';
+    searchWrapper.innerHTML = `
+        <div class="library-search-box">
+            <span class="material-icons library-search-icon">search</span>
+            <input
+                id="librarySearchInput"
+                class="library-search-input"
+                type="text"
+                placeholder="Search packages..."
+                autocomplete="off"
+            />
+            <span class="material-icons library-search-clear" id="librarySearchClear"
+                  onclick="clearLibrarySearch()" title="Clear">close</span>
+        </div>
+    `;
+
+    // Insert before the sidebar-content div
+    const content = document.getElementById('comp-list');
+    if (content && content.parentNode) {
+        content.parentNode.insertBefore(searchWrapper, content);
+    }
+
+    document.getElementById('librarySearchInput').addEventListener('input', function () {
+        filterLibraryItems(this.value.trim());
+        const clearBtn = document.getElementById('librarySearchClear');
+        if (clearBtn) clearBtn.style.opacity = this.value ? '1' : '0';
+    });
+}
+
+function clearLibrarySearch() {
+    const input = document.getElementById('librarySearchInput');
+    if (input) {
+        input.value = '';
+        input.dispatchEvent(new Event('input'));
+        input.focus();
+    }
+}
+
+function hasTrigramMatch(text, query) {
+
+    if (!query) return true;
+
+    return text
+        .toLowerCase()
+        .includes(
+            query.toLowerCase()
+        );
+}
+
+function filterLibraryItems(query) {
+
+    const container =
+
+        document.getElementById('comp-list');
+
+    if (!container) return;
+
+    const items =
+
+        container.querySelectorAll(
+
+            '[data-name], .comp-card, .service-card, .library-item, .comp-item, .sidebar-item'
+
+        );
+
+    let visibleCount = 0;
+
+
+    if (!items.length) {
+
+        const children =
+
+            container.children;
+
+        Array.from(children).forEach(el => {
+
+            const name =
+
+                el.dataset.name ||
+
+                el.textContent ||
+
+                '';
+
+            const match =
+
+                hasTrigramMatch(name, query);
+
+            el.style.display =
+
+                match ? '' : 'none';
+
+            if (match) visibleCount++;
+
+        });
+
+    } else {
+
+        items.forEach(el => {
+
+            const name =
+
+                el.dataset.name ||
+
+                el.querySelector('[data-name]')?.dataset.name ||
+
+                el.querySelector(
+
+                    '.comp-name, .item-name, .service-name, .card-title'
+
+                )?.textContent ||
+
+                el.textContent;
+
+            const match = hasTrigramMatch(name, query);
+
+            el.style.display = match ? '' : 'none';
+
+            if (match) visibleCount++;
+
+        });
+    }
+
+    // remove old message if exists
+    const oldMsg = document.getElementById('noResultsMsg');
+
+    if (oldMsg) oldMsg.remove();
+
+    // show message if no match
+    if (visibleCount === 0 && query) {
+
+        const msg = document.createElement('div');
+
+        msg.id = 'noResultsMsg';
+
+        msg.className = 'no-results';
+
+        msg.innerHTML = 'No Results Found';
+
+        container.appendChild(msg);
+    }
+}
+
 function getState() {
 
     const defaultState = {
@@ -404,6 +706,21 @@ async function saveConfiguration() {
         return;
     }
 
+    if (!state.price) {
+        alert("Enter charge amount");
+        return;
+    }
+
+    if (!state.endDate) {
+        alert("Select end date");
+        return;
+    }
+
+    if (!state.publicityCode) {
+        alert("Enter publicity code");
+        return;
+    }
+
     const chargeId = configName + "_PR";
 
     function formatDateToMMDDYYYY(dateStr) {
@@ -433,12 +750,11 @@ async function saveConfiguration() {
 
         tariffPackageDesc: configName,
 
-        charge: state.price || "0.00",
+        charge: state.price,
 
         endDate: formatDateToMMDDYYYY(state.endDate),
 
-        publicityId: state.publicityCode ||
-            "DEFAULT_PUB",
+        publicityId: state.publicityCode,
 
         chargeId: chargeId,
 
@@ -709,7 +1025,6 @@ function approvePackage(tpName, btn) {
                 + data.tariffPackageId
             );
 
-            // removeCard(btn);
             window.location.href = '/builder/admin';
 
         })
@@ -745,7 +1060,6 @@ function rejectPackage(tpName, btn) {
 
             alert("Rejected");
 
-            // removeCard(btn);
             window.location.href = '/builder/admin';
 
         })
@@ -757,44 +1071,225 @@ function rejectPackage(tpName, btn) {
         });
 }
 
-/* remove card from UI */
-function removeCard(btn) {
+function openSaved() {
 
-    const card =
-        btn.closest(".approval-card");
+    const overlay =
+        document.getElementById('savedOverlay');
 
-    if (card)
-        card.remove();
+    overlay.style.display = 'block';
 
-    const remainingCards =
-        document.querySelectorAll(".approval-card").length;
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            overlay.classList.add('active');
+        });
+    });
 
-    /* clear right panel */
-    document
-        .getElementById("hierarchy-view")
-        .classList.add("hidden");
-
-    if (remainingCards === 0) {
-
-        /* show empty state */
-        document
-            .getElementById("no-packages")
-            ?.classList.remove("hidden");
-
-        document
-            .getElementById("no-selection")
-            .classList.add("hidden");
-    }
-    else {
-
-        /* still have cards */
-
-        document
-            .getElementById("no-selection")
-            .classList.remove("hidden");
-
-        document
-            .getElementById("no-packages")
-            ?.classList.add("hidden");
-    }
+    loadSaved();
 }
+
+function loadSaved() {
+
+    const container =
+        document.getElementById('savedOverlayList');
+
+    container.innerHTML =
+        '<p class="sidebar-text">Loading...</p>';
+
+    fetch('/saved/list')
+
+        .then(res => res.json())
+
+        .then(data => {
+
+            // convert map → array
+            const configs =
+                Object.values(data);
+
+            if (!configs.length) {
+
+                container.innerHTML = `
+ 
+                <div class="drafts-empty">
+ 
+                    <span class="material-icons">
+                        inventory_2
+                    </span>
+ 
+                    <p class="drafts-empty-title">
+                        No saved configs
+                    </p>
+ 
+                </div>
+            `;
+
+                return;
+            }
+
+            window.ALL_SAVED =
+                configs;
+
+            container.innerHTML =
+
+                configs.map((c, i) => `
+ 
+            <div class="draft-item">
+ 
+                <div class="draft-info"
+                     onclick="loadSavedPackage(${i})">
+ 
+                    <span class="material-icons draft-icon">
+                        inventory_2
+                    </span>
+ 
+                    <div class="draft-text">
+ 
+                        <span class="draft-name">
+                            ${c.tpName}
+                        </span>
+ 
+                        <span class="draft-meta">
+                            ${c.username}
+                        </span>
+ 
+                    </div>
+ 
+                </div>
+ 
+            </div>
+ 
+        `).join("");
+
+        })
+
+        .catch(() => {
+
+            container.innerHTML =
+                '<p>Error loading configs</p>';
+        });
+}
+
+function loadSavedPackage(index) {
+
+    const config =
+        window.ALL_SAVED[index];
+
+    const d =
+        config.data;
+
+
+    /*
+       convert saved format → builder state
+    */
+
+    const state = {
+
+        s2: [{
+            id: d.tariffPlanId,
+            name: d.tariffPlanName
+        }],
+
+        s3: (d.defaultAtps || []).map(a => ({
+
+            id: a.servicePackageId,
+            name: a.packageName,
+            validity: a.validity,
+            midnightExpiry: a.midnightExpiry,
+            renewal: a.renewal,
+            rental: a.rental,
+            maxCount: a.maxCount,
+            freeCycles: a.freeCycles
+
+        })),
+
+        s4: (d.additionalAtps || []).map(a => ({
+
+            id: a.servicePackageId,
+            name: a.packageName,
+            validity: a.validity,
+            midnightExpiry: a.midnightExpiry,
+            renewal: a.renewal,
+            rental: a.rental,
+            maxCount: a.maxCount,
+            freeCycles: a.freeCycles
+
+        })),
+
+        price: d.charge,
+
+        publicityCode: d.publicityId,
+
+        endDate: d.endDate,
+
+        isCorporate: d.isCorporateYn
+    };
+
+
+    /*
+       SAME keys as draft loader
+    */
+
+    sessionStorage.setItem(
+        "state",
+        JSON.stringify(state)
+    );
+
+    sessionStorage.setItem(
+        "configName",
+        config.tpName
+    );
+
+    sessionStorage.setItem(
+        "pkgType",
+        d.packageType
+    );
+
+    sessionStorage.setItem(
+        "pkgSubType",
+        d.tariffPackCategory
+    );
+
+
+    /*
+       IMPORTANT for sidebar selections
+    */
+
+    sessionStorage.setItem(
+        "selectedSvcs_s2",
+        JSON.stringify(d.selectedSvcs_s2)
+    );
+
+    sessionStorage.setItem(
+        "selectedSvcs_s3",
+        JSON.stringify(d.selectedSvcs_s3)
+    );
+
+    sessionStorage.setItem(
+        "selectedSvcs_s4",
+        JSON.stringify(d.selectedSvcs_s4)
+    );
+
+
+    window.isInternalNavigation = true;
+
+    window.location.href =
+        "/builder/step1";
+}
+
+function closeSaved() {
+    const overlay = document.getElementById('savedOverlay');
+    overlay.classList.remove('active');
+
+    // Hide after slide-out transition completes
+    overlay.addEventListener('transitionend', function handler() {
+        if (!overlay.classList.contains('active')) {
+            overlay.style.display = 'none';
+        }
+        overlay.removeEventListener('transitionend', handler);
+    });
+}
+
+document.addEventListener('click', function (e) {
+    if (e.target.id === 'savedOverlay') {
+        closeSaved();
+    }
+});

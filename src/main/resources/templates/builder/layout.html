@@ -53,6 +53,19 @@
                 <span class="main-node-label">APPROVER</span>
             </a>
 
+            <div style="margin-top:auto;"></div>
+
+            <a href="#" class="main-node" id="mn-drafts" title="Drafts"
+				onclick="openSaved(); return false;"> <span
+				class="main-node-icon material-icons">folder</span> <span
+				class="main-node-label">SAVED</span>
+			</a>
+
+            <a href="#" class="main-node" id="mn-drafts" title="Drafts" th:classappend="${activeStep == 0} ? ' hidden'" onclick="openDrafts(); return false;">
+                <span class="main-node-icon material-icons">drafts</span>
+                <span class="main-node-label">DRAFTS</span>
+            </a>
+
         </nav>
 
         <!-- ═══════════════════════════════════════════════════════════
@@ -81,15 +94,6 @@
             </a>
         </nav>
 
-        <!-- SIDEBAR -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-tabs">
-                <div class="tab active">LIBRARY</div>
-                <div class="tab">DRAFTS</div>
-            </div>
-            <div class="sidebar-content" id="comp-list"></div>
-        </aside>
-
         <main class="workspace">
 
             <!-- HEADER -->
@@ -105,20 +109,31 @@
                             title="Reset builder" th:classappend="${activeStep == 0} ? ' hidden'">
                             restart_alt
                         </span>
+                        <span class="material-icons save-draft-btn" id="saveDraftBtn" onclick="manualSaveDraft()"
+                            title="Save as Draft" th:classappend="${activeStep == 0} ? ' hidden'">
+                            save
+                        </span>
                     </div>
                 </div>
             </header>
-                        
+
             <th:block th:replace="${stageFrag}"></th:block>
 
             <!-- FOOTER ACTIONS -->
-            <div class="config-panel" id="footerActions">
+            <div class="config-panel" id="footerActions" th:classappend="${activeStep != 5} ? ' hidden'">
                 <button class="btn-secondary" onclick="viewTree()">Hierarchy</button>
-                <button class="btn-primary" onclick="saveConfiguration()"
-                    th:classappend="${activeStep != 5} ? ' hidden'">SAVE CONFIG</button>
+                <button class="btn-primary" onclick="saveConfiguration()">SAVE CONFIG</button>
             </div>
 
         </main>
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-tabs">
+                <div class="tab active">LIBRARY</div>
+            </div>
+            <div class="sidebar-content" id="comp-list"></div>
+        </aside>
     </div>
 
     <!-- HIERARCHY MODAL -->
@@ -150,6 +165,39 @@
         const USERNAME = /*[[${username}]]*/ 'User';
     </script>
     <script th:src="@{/js/layout.js}"></script>
+
+    <!-- DRAFT OVERLAY -->
+    <div id="draftOverlay" class="draft-overlay">
+        <div class="draft-panel" id="draftPanel">
+
+            <div class="draft-header">
+                <span>Drafts</span>
+                <span class="material-icons close-btn" onclick="closeDrafts()">close</span>
+            </div>
+
+            <div class="draft-content" id="draftOverlayList">
+                <!-- drafts will render here -->
+            </div>
+
+        </div>
+    </div>
+
+    <div id="savedOverlay" class="draft-overlay">
+ 
+		<div class="draft-panel">
+ 
+			<div class="draft-header">
+ 
+				<span>Saved Configs</span> <span class="material-icons close-btn"
+					onclick="closeSaved()"> close </span>
+ 
+			</div>
+ 
+			<div class="draft-content" id="savedOverlayList"></div>
+ 
+		</div>
+ 
+	</div>
 
 </body>
 

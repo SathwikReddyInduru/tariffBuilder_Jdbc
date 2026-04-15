@@ -34,6 +34,7 @@ import com.xius.TariffBuilder.UserService.ServicePlanService;
 import com.xius.TariffBuilder.UserService.TariffApprovalService;
 import com.xius.TariffBuilder.UserService.TariffService;
 import com.xius.TariffBuilder.UserService.UserLoginService;
+import com.xius.TariffBuilder.util.JsonStorage;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -56,6 +57,9 @@ public class BuilderController {
 
     @Autowired
     private ServiceCloneService serviceCloneService;
+
+    @Autowired
+    private JsonStorage jsonStorage;
 
     // ================= LOGIN =================
 
@@ -513,5 +517,14 @@ public class BuilderController {
             logger.error("Error fetching drafts user={} error={}", username, e.getMessage(), e);
             return new ArrayList<>();
         }
+    }
+
+    @GetMapping("/saved/list")
+    @ResponseBody
+    public Map<String, Object> getSavedList(HttpSession session) {
+
+        String username = (String) session.getAttribute("username");
+
+        return jsonStorage.getByUser(username);
     }
 }
