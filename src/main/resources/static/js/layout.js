@@ -280,27 +280,10 @@ async function checkDraftsOnLogin() {
         const res = await fetch('/draft/list');
         const drafts = await res.json();
 
-        const tabs = document.querySelectorAll('.tab');
-        const container = document.getElementById('comp-list');
+        if (!drafts.length) return;
 
-        if (!drafts.length) {
-            // ensure Library tab is active
-            tabs.forEach(t => t.classList.remove('active'));
-            tabs[0]?.classList.add('active');
-            return;
-        }
-
-        // render drafts
-        window.ALL_DRAFTS = drafts;
-        container.innerHTML = drafts.map((d, i) => `
-            <div class="draft-item">
-                <div class="draft-info" onclick="loadDraft(${i})">
-                    <span class="draft-name">${d.name || 'Untitled'}</span>
-                    <span class="draft-meta">${d.savedOn || '—'} · ${d.savedTime || ''}</span>
-                </div>
-                <span class="material-icons draft-delete" onclick="deleteDraft(${i}, event)">delete_outline</span>
-            </div>
-        `).join('');
+        // OPEN DRAFT PANEL
+        openDrafts();
 
     } catch (err) {
         console.error('Draft check failed', err);
@@ -764,6 +747,12 @@ async function saveConfiguration() {
 
         tariffPlanName: state.s2[0].name,
 
+        selectedSvcs_s2: sessionStorage.getItem('selectedSvcs_s2') || '[]',
+
+        selectedSvcs_s3: sessionStorage.getItem('selectedSvcs_s3') || '[]',
+
+        selectedSvcs_s4: sessionStorage.getItem('selectedSvcs_s4') || '[]',
+
         defaultAtps: state.s3.map(item => ({
 
             servicePackageId: Number(item.id),
@@ -785,7 +774,7 @@ async function saveConfiguration() {
             freeCycles: item.freeCycles || 0
         })),
 
-        additionalAtps: state.s4.map(item => ({
+        allowedAtps: state.s4.map(item => ({
 
             servicePackageId: Number(item.id),
 
@@ -1132,30 +1121,22 @@ function loadSaved() {
 
                 configs.map((c, i) => `
  
-            <div class="draft-item">
- 
-                <div class="draft-info"
-                     onclick="loadSavedPackage(${i})">
- 
-                    <span class="material-icons draft-icon">
-                        inventory_2
-                    </span>
- 
-                    <div class="draft-text">
- 
-                        <span class="draft-name">
-                            ${c.tpName}
+                    <div class="draft-item">
+                        <div class="draft-info"
+                            onclick="loadSavedPackage(${i})">
+                            <span class="material-icons draft-icon">inventory_2</span>
+                            <div class="draft-text">
+                                <span class="draft-name">${c.tpName}</span>
+                                <span class="draft-meta">${c.username}</span>
+                            </div>
+                        </div>
+
+                        <!-- DELETE ICON -->
+                        <span class="material-icons draft-delete"
+                            onclick="deleteSaved('${c.tpName}', event)">
+                            delete_outline
                         </span>
- 
-                        <span class="draft-meta">
-                            ${c.username}
-                        </span>
- 
                     </div>
- 
-                </div>
- 
-            </div>
  
         `).join("");
 
@@ -1201,7 +1182,7 @@ function loadSavedPackage(index) {
 
         })),
 
-        s4: (d.additionalAtps || []).map(a => ({
+        s4: (d.allowedAtps || d.additionalAtps || []).map(a => ({
 
             id: a.servicePackageId,
             name: a.packageName,
@@ -1218,7 +1199,17 @@ function loadSavedPackage(index) {
 
         publicityCode: d.publicityId,
 
-        endDate: d.endDate,
+        endDate: (function () {
+
+            if (!d.endDate) return "";
+
+            var p = d.endDate.split("/");
+
+            if (p.length === 3)
+                return p[2] + "-" + p[0] + "-" + p[1];
+
+            return d.endDate;
+        })(),
 
         isCorporate: d.isCorporateYn
     };
@@ -1255,17 +1246,17 @@ function loadSavedPackage(index) {
 
     sessionStorage.setItem(
         "selectedSvcs_s2",
-        JSON.stringify(d.selectedSvcs_s2)
+        d.selectedSvcs_s2 || '[]'
     );
 
     sessionStorage.setItem(
         "selectedSvcs_s3",
-        JSON.stringify(d.selectedSvcs_s3)
+        d.selectedSvcs_s3 || '[]'
     );
 
     sessionStorage.setItem(
         "selectedSvcs_s4",
-        JSON.stringify(d.selectedSvcs_s4)
+        d.selectedSvcs_s4 || '[]'
     );
 
 
@@ -1273,6 +1264,23 @@ function loadSavedPackage(index) {
 
     window.location.href =
         "/builder/step1";
+}
+
+function deleteSaved(tpName, e) {
+    e.stopPropagation();
+
+    if (!confirm(`Delete "${tpName}"?`)) return;
+
+    fetch('/saved/delete/' + tpName, {
+        method: 'POST'
+    })
+    .then(() => {
+        // remove from UI instantly
+        loadSaved(); // reload list
+    })
+    .catch(() => {
+        alert("Delete failed ❌");
+    });
 }
 
 function closeSaved() {
@@ -1293,3 +1301,23 @@ document.addEventListener('click', function (e) {
         closeSaved();
     }
 });
+
+function goBack() {
+    const step = getActiveStep();
+
+    if (step <= 1) return;
+
+    window.isInternalNavigation = true;
+    window.location.href = `/builder/step${step - 1}`;
+}
+
+function goNext() {
+    const step = getActiveStep();
+
+    if (!checkStepAccess(step + 1)) return;
+
+    if (step >= 5) return;
+
+    window.isInternalNavigation = true;
+    window.location.href = `/builder/step${step + 1}`;
+}

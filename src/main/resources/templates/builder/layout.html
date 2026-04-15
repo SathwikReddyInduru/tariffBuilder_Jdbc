@@ -55,13 +55,14 @@
 
             <div style="margin-top:auto;"></div>
 
-            <a href="#" class="main-node" id="mn-drafts" title="Drafts"
-				onclick="openSaved(); return false;"> <span
-				class="main-node-icon material-icons">folder</span> <span
-				class="main-node-label">SAVED</span>
-			</a>
+            <a href="#" class="main-node" id="mn-saved" title="Drafts" th:classappend="${activeStep == 0} ? ' hidden'"
+                onclick="openSaved(); return false;">
+                <span class="main-node-icon material-icons">folder</span>
+                <span class="main-node-label">SAVED</span>
+            </a>
 
-            <a href="#" class="main-node" id="mn-drafts" title="Drafts" th:classappend="${activeStep == 0} ? ' hidden'" onclick="openDrafts(); return false;">
+            <a href="#" class="main-node" id="mn-drafts" title="Drafts" th:classappend="${activeStep == 0} ? ' hidden'"
+                onclick="openDrafts(); return false;">
                 <span class="main-node-icon material-icons">drafts</span>
                 <span class="main-node-label">DRAFTS</span>
             </a>
@@ -122,7 +123,7 @@
             <!-- FOOTER ACTIONS -->
             <div class="config-panel" id="footerActions" th:classappend="${activeStep != 5} ? ' hidden'">
                 <button class="btn-secondary" onclick="viewTree()">Hierarchy</button>
-                <button class="btn-primary" onclick="saveConfiguration()">SAVE CONFIG</button>
+                <!-- <button class="btn-primary" onclick="saveConfiguration()">SAVE CONFIG</button> -->
             </div>
 
         </main>
@@ -155,9 +156,9 @@
         </div>
     </div>
 
-    <footer class="footer">
+    <!-- <footer class="footer">
         <p>© 2026 XIUS</p>
-    </footer>
+    </footer> -->
 
     <script th:inline="javascript">
         const PRIVILEGE_IDS = /*[[${privilegeIds}]]*/[];
@@ -183,21 +184,20 @@
     </div>
 
     <div id="savedOverlay" class="draft-overlay">
- 
-		<div class="draft-panel">
- 
-			<div class="draft-header">
- 
-				<span>Saved Configs</span> <span class="material-icons close-btn"
-					onclick="closeSaved()"> close </span>
- 
-			</div>
- 
-			<div class="draft-content" id="savedOverlayList"></div>
- 
-		</div>
- 
-	</div>
+
+        <div class="draft-panel">
+
+            <div class="draft-header">
+
+                <span>Saved Configs</span> <span class="material-icons close-btn" onclick="closeSaved()"> close </span>
+
+            </div>
+
+            <div class="draft-content" id="savedOverlayList"></div>
+
+        </div>
+
+    </div>
 
 </body>
 

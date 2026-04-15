@@ -336,4 +336,25 @@ public class JsonStorage {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
+	public void removeByUser(String tpName, String username) {
+		try {
+			Map<String, Object> json = readAll();
+
+			Object value = json.get(tpName);
+
+			if (value instanceof Map) {
+				Map<String, Object> tp = (Map<String, Object>) value;
+
+				if (username.equals(tp.get("username"))) {
+					json.remove(tpName);
+					writeAll(json);
+				}
+			}
+
+		} catch (Exception e) {
+			logger.error("removeByUser error", e);
+		}
+	}
+
 }
