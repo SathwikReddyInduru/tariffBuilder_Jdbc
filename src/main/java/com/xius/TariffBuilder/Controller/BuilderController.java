@@ -30,6 +30,7 @@ import com.xius.TariffBuilder.Entity.ServicePlanPackMap;
 import com.xius.TariffBuilder.UserService.BundleService;
 import com.xius.TariffBuilder.UserService.SaveConfigService;
 import com.xius.TariffBuilder.UserService.ServiceCloneService;
+import com.xius.TariffBuilder.UserService.ServicePackageService;
 import com.xius.TariffBuilder.UserService.ServicePlanService;
 import com.xius.TariffBuilder.UserService.TariffApprovalService;
 import com.xius.TariffBuilder.UserService.TariffService;
@@ -57,6 +58,9 @@ public class BuilderController {
 
     @Autowired
     private ServiceCloneService serviceCloneService;
+
+    @Autowired
+    private ServicePackageService servicePackageService;
 
     // ================= LOGIN =================
 
@@ -510,5 +514,22 @@ public class BuilderController {
         } catch (Exception e) {
             return new ArrayList<>();
         }
+    }
+
+    @ResponseBody
+    @PostMapping("/description")
+    public Map<String, String> getDescription(@RequestBody Map<String, Object> request) {
+
+        Long servicePackageId = Long.valueOf(request.get("servicePackageId").toString());
+
+        Long networkId = Long.valueOf(request.get("networkId").toString());
+
+        String desc = servicePackageService.getDescription(servicePackageId, networkId);
+
+        // FIX → handle null
+        if (desc == null) {
+            desc = "Description not found";
+        }
+        return Map.of("description", desc);
     }
 }

@@ -116,8 +116,12 @@ function refreshSidebar() {
                 return;
             }
 
+            const networkId = sessionStorage.getItem('networkId') || '';
+
             list.innerHTML = data.map(plan => `
                 <div class="draggable-item"
+                     data-network-id="${networkId}"
+                     data-package-id="${plan.servicePackageId}"
                      onclick="addToCenter('${plan.servicePackageId}', '${plan.servicePackageName}')">
                     ${plan.servicePackageName}
                 </div>

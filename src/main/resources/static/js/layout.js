@@ -684,6 +684,9 @@ async function saveConfiguration() {
 
     const state = JSON.parse(sessionStorage.getItem("state"));
 
+    const isUpdate = sessionStorage.getItem("isUpdate") === "true";
+
+
     if (!state?.s2?.length) {
         alert("Step 2 required");
         return;
@@ -719,6 +722,8 @@ async function saveConfiguration() {
     const payload = {
 
         username: USERNAME,
+
+        isUpdate: isUpdate,
 
         submittedOn: new Date().toLocaleDateString('en-GB', {
             day: '2-digit',
@@ -842,6 +847,7 @@ function clearBuilderSession() {
     sessionStorage.removeItem('configName');
     sessionStorage.removeItem('pkgType');
     sessionStorage.removeItem('pkgSubType');
+    sessionStorage.removeItem("isUpdate");
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1127,7 +1133,7 @@ function loadSaved() {
                             <span class="material-icons draft-icon">inventory_2</span>
                             <div class="draft-text">
                                 <span class="draft-name">${c.tpName}</span>
-                                <span class="draft-meta">${c.username}</span>
+                                <span class="draft-meta">${c.username} · ${c.data?.submittedOn || ''}</span>
                             </div>
                         </div>
 
@@ -1259,6 +1265,7 @@ function loadSavedPackage(index) {
         d.selectedSvcs_s4 || '[]'
     );
 
+    sessionStorage.setItem("isUpdate", "true");
 
     window.isInternalNavigation = true;
 
@@ -1274,13 +1281,13 @@ function deleteSaved(tpName, e) {
     fetch('/saved/delete/' + tpName, {
         method: 'POST'
     })
-    .then(() => {
-        // remove from UI instantly
-        loadSaved(); // reload list
-    })
-    .catch(() => {
-        alert("Delete failed ❌");
-    });
+        .then(() => {
+            // remove from UI instantly
+            loadSaved(); // reload list
+        })
+        .catch(() => {
+            alert("Delete failed ❌");
+        });
 }
 
 function closeSaved() {
@@ -1321,3 +1328,128 @@ function goNext() {
     window.isInternalNavigation = true;
     window.location.href = `/builder/step${step + 1}`;
 }
+
+// ═══════════════════════════════════════════════════════
+//  PLAN HOVER TOOLTIP
+// ═══════════════════════════════════════════════════════
+
+(function initPlanHoverTooltip() {
+
+    // ── Create a single shared tooltip element ──
+    const tooltip = document.createElement('div');
+    tooltip.id = 'planHoverTooltip';
+    tooltip.style.cssText = `
+        position: fixed;
+        z-index: 9999;
+        background: #1e293b;
+        color: #f1f5f9;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+        line-height: 1.5;
+        max-width: 280px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        white-space: pre-wrap;
+        word-break: break-word;
+    `;
+    document.body.appendChild(tooltip);
+
+    // Cache: packageId → response string (avoids duplicate API calls)
+    const _tooltipCache = {};
+    // Track in-flight requests to avoid duplicates
+    const _inFlight = {};
+
+    function showTooltip(text, x, y) {
+        tooltip.textContent = text;
+        positionTooltip(x, y);
+        tooltip.style.opacity = '1';
+    }
+
+    function hideTooltip() {
+        tooltip.style.opacity = '0';
+    }
+
+    function positionTooltip(x, y) {
+        const GAP = 12;
+        const tw = tooltip.offsetWidth || 280;
+        const th = tooltip.offsetHeight || 60;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        let left = x + GAP;
+        let top = y + GAP;
+
+        if (left + tw > vw - 8) left = x - tw - GAP;
+        if (top + th > vh - 8) top = y - th - GAP;
+
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+    }
+
+    // ── Delegate hover on #comp-list plan cards ──
+    document.addEventListener('mouseover', function (e) {
+        const card = e.target.closest('[data-network-id][data-package-id], [data-networkid][data-packageid]');
+        if (!card) return;
+
+        const networkId = card.dataset.networkId || card.dataset.networkid;
+        const servicePackageId = card.dataset.packageId || card.dataset.packageid;
+        if (!networkId || !servicePackageId) return;
+
+        const cacheKey = networkId + ':' + servicePackageId;
+
+        // If cached, show immediately
+        if (_tooltipCache[cacheKey]) {
+            showTooltip(_tooltipCache[cacheKey], e.clientX, e.clientY);
+            return;
+        }
+
+        // Show loading state while fetching
+        showTooltip('Loading...', e.clientX, e.clientY);
+
+        // Skip if already fetching
+        if (_inFlight[cacheKey]) return;
+        _inFlight[cacheKey] = true;
+
+        fetch('/description', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ networkId, servicePackageId })
+        })
+            .then(res => res.json())   // parse JSON first
+            .then(data => {
+                console.log("API RESPONSE:", data);
+                const description = data.description;  // adjust based on backend
+
+                _tooltipCache[cacheKey] = description || '—';
+
+                showTooltip(_tooltipCache[cacheKey], e.clientX, e.clientY);
+            })
+            .catch(() => {
+                _tooltipCache[cacheKey] = 'Description unavailable';
+            })
+            .finally(() => {
+                delete _inFlight[cacheKey];
+            });
+    });
+
+    // ── Follow mouse while inside the card ──
+    document.addEventListener('mousemove', function (e) {
+        if (tooltip.style.opacity === '1') {
+            positionTooltip(e.clientX, e.clientY);
+        }
+    });
+
+    // ── Hide when leaving the card ──
+    document.addEventListener('mouseout', function (e) {
+        const card = e.target.closest('[data-network-id][data-package-id], [data-networkid][data-packageid]');
+        if (!card) return;
+        if (!card.contains(e.relatedTarget)) {
+            hideTooltip();
+        }
+    });
+
+})();
