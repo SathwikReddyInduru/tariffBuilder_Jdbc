@@ -5,6 +5,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -15,8 +16,12 @@ public class ServiceCloneService {
 
 	private static final Logger logger = LoggerFactory.getLogger(ServiceCloneService.class);
 
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
+//	@Autowired
+//	private JdbcTemplate jdbcTemplate;
+	
+	    @Autowired
+		@Qualifier("oracleJdbcTemplate")
+		private JdbcTemplate jdbcTemplate;
 
 	/*
 	 * ===================================================== VALIDATION

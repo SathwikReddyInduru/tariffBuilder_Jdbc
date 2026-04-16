@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -12,9 +13,13 @@ import jakarta.transaction.Transactional;
 @Service
 public class BundleService {
 
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
+//	@Autowired
+//	private JdbcTemplate jdbcTemplate;
 
+	    @Autowired
+		@Qualifier("oracleJdbcTemplate")
+		private JdbcTemplate jdbcTemplate;
+	
 	@Transactional
 	public Long cloneAtpData(Long atpId, Long networkId, String tpName) {
 

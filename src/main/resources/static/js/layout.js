@@ -267,7 +267,7 @@ function applyPrivilege() {
     }
 }
 
-async function checkDraftsOnLogin() {
+/*async function checkDraftsOnLogin() {
     const isBuilderPage = window.location.pathname.startsWith('/builder/step');
     if (!isBuilderPage) return;
     if (!window.location.pathname.includes('step1')) return;
@@ -288,7 +288,7 @@ async function checkDraftsOnLogin() {
     } catch (err) {
         console.error('Draft check failed', err);
     }
-}
+}*/
 
 // ── Apply privilege on load ──
 window.addEventListener('DOMContentLoaded', () => {
