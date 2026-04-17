@@ -296,7 +296,6 @@ window.addEventListener('DOMContentLoaded', () => {
     applyPrivilege();
     restoreActiveModule();
     restoreConfigName();
-    checkDraftsOnLogin();
 
     // mark all step navigation as internal so draft save is skipped
     document.querySelectorAll('.step-node, .main-node').forEach(link => {
@@ -410,8 +409,8 @@ function getActiveStep() {
 
 // Shows/hides the Hierarchy button — only visible on step 5
 function applyHierarchyButtonVisibility(step) {
-    // The Hierarchy button is the first btn-secondary in footerActions
-    const hierarchyBtn = document.querySelector('#footerActions .btn-secondary');
+    // The Hierarchy button is the first btn-hierarchy in footerActions
+    const hierarchyBtn = document.querySelector('#footerActions .btn-hierarchy');
     if (hierarchyBtn) {
         hierarchyBtn.style.display = (step === 5) ? 'inline-flex' : 'none';
     }
@@ -818,14 +817,13 @@ async function saveConfiguration() {
             });
 
         const result = await response.json();
-        console.log("RESPONSE", result);
 
         if (!response.ok || result.error) {
 
             alert(result.error || "Validation failed");
             return;
         }
-        alert("Configuration Prepared (JSON stored)");
+        alert(result.message);
 
         clearBuilderSession();
 
@@ -885,6 +883,13 @@ function logout() {
     window.location.href = '/logout';
 }
 
+const storedSessionId = sessionStorage.getItem("SESSION_ID");
+
+if (SESSION_ID && storedSessionId !== SESSION_ID) {
+    clearBuilderSession(); // safer
+    sessionStorage.setItem("SESSION_ID", SESSION_ID);
+}
+
 // ═══════════════════════════════════════════════════════
 //  ADMIN — TWO-PANE APPROVER UI (with working arrows)
 // ═══════════════════════════════════════════════════════
@@ -927,10 +932,20 @@ function loadHierarchy(tpName) {
             document.getElementById('h-name').textContent = data.tariffPackageDesc || tpName;
 
             const metaHTML = `
-                <span class="meta-pill">${data.packageType}</span>
-                <span class="meta-pill">${data.tariffPackCategory || 'NORMAL'}</span>
-                <span class="meta-pill">${data.isCorporateYn ? 'Corporate' : 'Retail'}</span>
-            `;
+			<span class="meta-pill">
+			        <span class="pill-label">Billing Type</span>
+			        <span class="pill-value">${data.packageType}</span>
+			    </span>
+			    <span class="meta-pill">
+			        <span class="pill-label">Category</span>
+			        <span class="pill-value">${data.tariffPackCategory || 'Normal'}</span>
+			    </span>
+			    <span class="meta-pill">
+			        <span class="pill-label">Segment</span>
+			        <span class="pill-value">${data.isCorporateYn ? 'Corporate' : 'Retail'}</span>
+			    </span>
+			`;
+            document.getElementById('h-meta').innerHTML = metaHTML;
             document.getElementById('h-meta').innerHTML = metaHTML;
 
             const submittedBy = data.username || '—';
@@ -964,7 +979,7 @@ function loadHierarchy(tpName) {
             document.getElementById('h-datp').innerHTML = datpHtml || '<p style="color:#94a3b8; font-size:13px; padding:8px 0;">No DATP components</p>';
 
             // AATP Components
-            const aatp = data.additionalAtps || [];
+            const aatp = data.allowedAtps || [];
             document.getElementById('h-aatp-header').textContent = `➕ AATP - ${aatp.length} COMPONENTS`;
             const aatpHtml = aatp.map(item => `
                 <div class="component-box">
@@ -1127,7 +1142,7 @@ function loadSaved() {
 
                 configs.map((c, i) => `
  
-                    <div class="draft-item">
+                    <div class="draft-item saved">
                         <div class="draft-info"
                             onclick="loadSavedPackage(${i})">
                             <span class="material-icons draft-icon">inventory_2</span>
@@ -1137,15 +1152,12 @@ function loadSaved() {
                             </div>
                         </div>
 
-                        <!-- DELETE ICON -->
                         <span class="material-icons draft-delete"
                             onclick="deleteSaved('${c.tpName}', event)">
                             delete_outline
                         </span>
                     </div>
- 
-        `).join("");
-
+            `).join("");
         })
 
         .catch(() => {
@@ -1345,8 +1357,8 @@ function goNext() {
         color: #f1f5f9;
         border: 1px solid #334155;
         border-radius: 8px;
-        padding: 10px 14px;
-        font-size: 13px;
+        padding: 8px 14px;
+        font-size: 10px;
         line-height: 1.5;
         max-width: 280px;
         box-shadow: 0 8px 24px rgba(0,0,0,0.35);

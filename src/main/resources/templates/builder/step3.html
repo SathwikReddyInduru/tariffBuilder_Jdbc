@@ -11,7 +11,7 @@
 
             <div class="guide-header">
                 <span class="material-icons">extension</span>
-                <b>Default Components (DATP)</b>
+                <b>Default Additional Tariff Plans (DATP)</b>
             </div>
 
             <div class="guide-steps">
@@ -31,9 +31,15 @@
         </div>
 
         <div class="svc-container">
-            <button class="svc-pill" data-svc="VOICE" onclick="toggleSvc('VOICE', this)">VOICE</button>
-            <button class="svc-pill" data-svc="SMS" onclick="toggleSvc('SMS', this)">SMS</button>
-            <button class="svc-pill" data-svc="DATA" onclick="toggleSvc('DATA', this)">DATA</button>
+            <button class="svc-pill" data-svc="VOICE" onclick="toggleSvc('VOICE', this)">
+                <span class="material-icons pill-icon">phone</span>
+                VOICE</button>
+            <button class="svc-pill" data-svc="SMS" onclick="toggleSvc('SMS', this)">
+                <span class="material-icons pill-icon">sms</span>
+                SMS</button>
+            <button class="svc-pill" data-svc="DATA" onclick="toggleSvc('DATA', this)">
+                <span class="material-icons pill-icon">wifi</span>
+                DATA</button>
         </div>
 
         <!-- Drop zone — rendered by step3.js -->

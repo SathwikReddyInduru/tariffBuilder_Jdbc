@@ -67,6 +67,8 @@ public class BuilderController {
     @GetMapping("/loginform")
     public String showLoginPage(HttpSession session, Model model) {
 
+        model.addAttribute("sessionId", session.getId());
+
         if (!isNotLoggedIn(session)) {
             return "redirect:/builder";
         }
@@ -344,6 +346,8 @@ public class BuilderController {
         model.addAttribute("privileges", session.getAttribute("privileges"));
 
         model.addAttribute("privilegeIds", session.getAttribute("privilegeIds"));
+
+        model.addAttribute("sessionId", session.getId());
     }
 
     private boolean isNotLoggedIn(HttpSession session) {

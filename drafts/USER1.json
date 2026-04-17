@@ -1,16 +1,16 @@
 [ {
   "name" : "Untitled Draft",
   "pkgType" : "POSTPAID",
-  "pkgSubType" : "COMMERCIAL",
-  "savedOn" : "16 Apr 2026",
-  "savedTime" : "17:56",
-  "selectedSvcs_s2" : "[\"DATA\"]",
-  "selectedSvcs_s3" : null,
+  "pkgSubType" : null,
+  "savedOn" : "17 Apr 2026",
+  "savedTime" : "17:02",
+  "selectedSvcs_s2" : "[\"VOICE\"]",
+  "selectedSvcs_s3" : "[]",
   "selectedSvcs_s4" : null,
   "state" : {
     "s2" : [ {
-      "id" : "1745",
-      "name" : "MI MUNDO S_DA",
+      "id" : "1743",
+      "name" : "MI MUNDO S_V",
       "networkId" : "16"
     } ],
     "s3" : [ ],
