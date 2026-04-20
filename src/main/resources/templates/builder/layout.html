@@ -95,7 +95,7 @@
             </a>
         </nav>
 
-        <main class="workspace">
+        <main class="workspace" th:classappend="${activeStep == 0} ? ' admin-mode'">
 
             <!-- FLOATING PILL HEADER -->
             <header class="header-pill-bar">
@@ -130,7 +130,7 @@
                 </div>
 
                 <!-- RIGHT PANE — library sidebar -->
-                <aside class="pane pane-right sidebar" id="sidebar">
+                <aside class="pane pane-right sidebar" th:classappend="${activeStep == 0} ? ' hidden'" id="sidebar">
                     <div class="sidebar-tabs">
                         <div class="tab">LIBRARY</div>
                     </div>

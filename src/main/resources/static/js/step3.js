@@ -12,6 +12,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const state = getState();
 
+    if (!state.s3) state.s3 = [];
+
     // restore cards
     state.s3.forEach(item => renderCard(item));
 
@@ -137,6 +139,8 @@ function addToCenter(id, name) {
 
     const state = getState();
 
+    if (!state.s3) state.s3 = [];
+
     if (state.s3.find(i => i.id === id)) return;
 
     const item = {
@@ -167,7 +171,7 @@ function renderCard(item) {
 
     card.innerHTML = `
 
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
             <b>${item.name}</b>
             <span onclick="removeItem('${item.id}')" style="color:red; cursor:pointer;">✕</span>
         </div>
