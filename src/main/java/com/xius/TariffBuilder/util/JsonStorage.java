@@ -72,9 +72,7 @@ public class JsonStorage {
 
 			Map<String, Object> request) {
 
-		logger.info(
-				"Storing JSON tpName={}",
-				tpName);
+		logger.info("Storing JSON tpName={}", tpName);
 
 		try {
 
@@ -84,6 +82,9 @@ public class JsonStorage {
 
 			Map<String, Object> json = new LinkedHashMap<>();
 
+			/*
+			 * read existing JSON
+			 */
 			if (file.exists() && file.length() > 0) {
 
 				json = mapper.readValue(
@@ -94,48 +95,49 @@ public class JsonStorage {
 						});
 			}
 
+			/*
+			 * prepare TP data
+			 */
 			Map<String, Object> tpData = new LinkedHashMap<>();
 
-			tpData.put(
-					"tpName",
-					tpName);
+			tpData.put("tpName", tpName);
 
-			tpData.put(
-					"username",
-					username);
+			tpData.put("username", username);
 
-			tpData.put(
-					"networkId",
-					networkId);
+			tpData.put("networkId", networkId);
 
-			tpData.put(
-					"data",
-					request);
+			tpData.put("data", request);
 
-			Map<String, Object> newJson = new LinkedHashMap<>();
+			/*
+			 * remove old TP if exists prevents duplicate
+			 */
+			if (json.containsKey(tpName)) {
 
-			newJson.put(tpName, tpData);
+				logger.info("Updating existing TP {}", tpName);
 
-			newJson.putAll(json);
+				json.remove(tpName);
+			}
 
-			json = newJson;
+			/*
+			 * maintain latest TP at top
+			 */
+			Map<String, Object> orderedJson = new LinkedHashMap<>();
 
-			mapper
-					.writerWithDefaultPrettyPrinter()
-					.writeValue(
-							file,
-							json);
+			orderedJson.put(tpName, tpData);
 
-			logger.info(
-					"JSON stored {}",
-					tpName);
+			orderedJson.putAll(json);
+
+			/*
+			 * write file
+			 */
+			mapper.writerWithDefaultPrettyPrinter().writeValue(file, orderedJson);
+
+			logger.info("JSON stored successfully {}", tpName);
 		}
 
 		catch (Exception e) {
 
-			logger.error(
-					"store error",
-					e);
+			logger.error("store error", e);
 		}
 	}
 

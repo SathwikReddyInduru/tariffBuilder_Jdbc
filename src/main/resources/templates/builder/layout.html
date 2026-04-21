@@ -14,15 +14,18 @@
 
     <nav class="navbar">
         <img th:src="@{/images/logo.png}" alt="Xius Logo" style="height:50px; vertical-align:middle;">
-        <div class="user-menu">
-            <div class="user-icon" onclick="toggleUserMenu()">
-                <span>👤</span>
-            </div>
-            <div class="user-dropdown" id="userDropdown">
-                <div class="user-name" th:text="${username != null ? username : 'User'}">User</div>
-                <div class="logout-option" onclick="logout()">
-                    <span class="material-icons" style="font-size:18px; margin-right:8px;">logout</span>
-                    Logout
+        <div class="navbar-right">
+            <div id="navClock" class="nav-clock"></div>
+            <div class="user-menu">
+                <div class="user-icon" onclick="toggleUserMenu()">
+                    <span>👤</span>
+                </div>
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="user-name" th:text="${username != null ? username : 'User'}">User</div>
+                    <div class="logout-option" onclick="logout()">
+                        <span class="material-icons" style="font-size:18px; margin-right:8px;">logout</span>
+                        Logout
+                    </div>
                 </div>
             </div>
         </div>
@@ -100,8 +103,7 @@
             <!-- FLOATING PILL HEADER -->
             <header class="header-pill-bar">
                 <div class="logo">
-                    <span th:text="${activeStep == 0} ? 'Approver' : 'Builder'">Builder</span>
-                    | <span th:text="${username != null ? username : 'user'}">user</span>
+                    <span th:text="${username != null ? username : 'user'}">user</span>
                 </div>
                 <div class="header-pill-controls" th:classappend="${activeStep == 0} ? ' hidden'">
                     <input type="text" placeholder="Name..." class="config-name" id="configName">

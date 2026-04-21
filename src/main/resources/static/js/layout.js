@@ -135,6 +135,7 @@ function loadDraft(index) {
     sessionStorage.setItem('selectedSvcs_s2', draft.selectedSvcs_s2 || '[]');
     sessionStorage.setItem('selectedSvcs_s3', draft.selectedSvcs_s3 || '[]');
     sessionStorage.setItem('selectedSvcs_s4', draft.selectedSvcs_s4 || '[]');
+    sessionStorage.setItem('loadedFromDraft', 'true');
 
     window.isInternalNavigation = true;
     window.location.href = '/builder/step1';
@@ -757,7 +758,7 @@ async function saveConfiguration() {
 
         selectedSvcs_s4: sessionStorage.getItem('selectedSvcs_s4') || '[]',
 
-        defaultAtps: state.s3.map(item => ({
+        defaultAtps: (state.s3 || []).map(item => ({
 
             servicePackageId: Number(item.id),
 
@@ -778,7 +779,7 @@ async function saveConfiguration() {
             freeCycles: item.freeCycles || 0
         })),
 
-        allowedAtps: state.s4.map(item => ({
+        allowedAtps: (state.s4 || []).map(item => ({
 
             servicePackageId: Number(item.id),
 
@@ -825,6 +826,17 @@ async function saveConfiguration() {
         }
         alert(result.message);
 
+        if (sessionStorage.getItem('loadedFromDraft') === 'true') {
+            const draftName = sessionStorage.getItem('configName');
+            if (draftName) {
+                fetch('/draft/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: draftName, _delete: true })
+                });
+            }
+        }
+
         clearBuilderSession();
 
         window.isInternalNavigation = true;
@@ -846,6 +858,7 @@ function clearBuilderSession() {
     sessionStorage.removeItem('pkgType');
     sessionStorage.removeItem('pkgSubType');
     sessionStorage.removeItem("isUpdate");
+    sessionStorage.removeItem('loadedFromDraft');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1340,6 +1353,21 @@ function goNext() {
     window.isInternalNavigation = true;
     window.location.href = `/builder/step${step + 1}`;
 }
+
+(function initClock() {
+    const clockEl = document.getElementById('navClock');
+    if (!clockEl) return;
+
+    function tick() {
+        clockEl.textContent = new Date().toLocaleString('en-GB', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+        });
+    }
+
+    tick();
+    setInterval(tick, 1000);
+})();
 
 // ═══════════════════════════════════════════════════════
 //  PLAN HOVER TOOLTIP
