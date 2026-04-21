@@ -17,12 +17,12 @@ public class ServicePlanService {
 
 	private static final Logger logger = LoggerFactory.getLogger(ServicePlanService.class);
 
-//	@Autowired
-//	private JdbcTemplate jdbcTemplate;
-	
-	    @Autowired
-		@Qualifier("oracleJdbcTemplate")
-		private JdbcTemplate jdbcTemplate;
+	// @Autowired
+	// private JdbcTemplate jdbcTemplate;
+
+	@Autowired
+	@Qualifier("oracleJdbcTemplate")
+	private JdbcTemplate jdbcTemplate;
 
 	public List<ServicePlanPackMap> getPlans(Long networkId, String types) {
 

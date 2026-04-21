@@ -177,7 +177,15 @@ public class BuilderController {
 
         List<String> tariffList = tariffService.getTariffPackages();
 
-        logger.debug("Tariff packages count={}", tariffList.size());
+        // log request info
+        logger.info("Fetching TP list for admin user={} networkId={}",
+                session.getAttribute("username"),
+                session.getAttribute("networkId"));
+
+        // log response data
+        logger.info("TP list response size={}", tariffList.size());
+
+        logger.debug("TP list data={}", tariffList);
 
         model.addAttribute("tariff", tariffList);
 

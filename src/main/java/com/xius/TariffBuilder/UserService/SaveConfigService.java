@@ -81,8 +81,8 @@ public class SaveConfigService {
 		logger.info("Config prepared successfully tpName={} username={} networkId={}", tpName, username, networkId);
 
 		response.put("message",
-				isUpdate ? "Tariff Package updated successfully, " + tpName
-						: "Tariff Package created successfully, " + tpName);
+                isUpdate ? "Tariff Package updated successfully, " + tpName
+                        : "Tariff Package created successfully, " + tpName);
 
 		response.put("tpName", tpName);
 
