@@ -1,49 +1,4 @@
 {
-  "testing2" : {
-    "tpName" : "testing2",
-    "username" : "USER1",
-    "networkId" : 16,
-    "data" : {
-      "username" : "USER1",
-      "isUpdate" : false,
-      "submittedOn" : "21 Apr 2026",
-      "packageType" : "POSTPAID",
-      "tariffPackCategory" : "GENERAL",
-      "tariffPackageDesc" : "testing2",
-      "charge" : "400",
-      "endDate" : "04/30/2026",
-      "publicityId" : "perter",
-      "chargeId" : "testing2_PR",
-      "isCorporateYn" : false,
-      "tariffPlanId" : 1743,
-      "tariffPlanName" : "MI MUNDO S_V",
-      "selectedSvcs_s2" : "[\"VOICE\"]",
-      "selectedSvcs_s3" : "[\"VOICE\"]",
-      "selectedSvcs_s4" : "[\"DATA\"]",
-      "defaultAtps" : [ {
-        "servicePackageId" : 1750,
-        "chargeId" : "testing2_PR",
-        "packageName" : "MI MUNDO M_VO",
-        "validity" : "Monthly",
-        "midnightExpiry" : "No",
-        "renewal" : "No",
-        "rental" : 0,
-        "maxCount" : 0,
-        "freeCycles" : "0"
-      } ],
-      "allowedAtps" : [ {
-        "servicePackageId" : 1746,
-        "chargeId" : "testing2_PR",
-        "packageName" : "MI MUNDO S_D",
-        "validity" : "Monthly",
-        "midnightExpiry" : "No",
-        "renewal" : "No",
-        "rental" : 0,
-        "maxCount" : 0,
-        "freeCycles" : "0"
-      } ]
-    }
-  },
   "Test_TP" : {
     "tpName" : "Test_TP",
     "username" : "USER1",

@@ -477,13 +477,16 @@ public class BuilderController {
 
         try {
             ObjectMapper mapper = new ObjectMapper();
-
             Map<String, Object> draft = mapper.readValue(draftJson, Map.class);
 
+            // prefer session username, fall back to payload username, then guest
             String username = (String) session.getAttribute("username");
-
-            if (username == null)
+            if (username == null) {
+                username = (String) draft.get("username");
+            }
+            if (username == null) {
                 username = "guest";
+            }
 
             saveConfigService.saveDraft(draft, username);
 
