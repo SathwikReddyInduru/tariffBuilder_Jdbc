@@ -1,12 +1,82 @@
 [ {
+  "name" : "testing",
+  "pkgType" : "POSTPAID",
+  "pkgSubType" : "COMMERCIAL",
+  "savedOn" : "23 Apr 2026",
+  "savedTime" : "17:47",
+  "username" : "USER1",
+  "selectedSvcs_s2" : "[\"VOICE\"]",
+  "selectedSvcs_s3" : "[\"VOICE\"]",
+  "selectedSvcs_s4" : "[\"VOICE\"]",
+  "state" : {
+    "s2" : [ {
+      "id" : 1743,
+      "name" : "MI MUNDO S_V"
+    } ],
+    "s3" : [ {
+      "id" : 1750,
+      "name" : "MI MUNDO M_VO",
+      "validity" : "Monthly",
+      "midnightExpiry" : "No",
+      "renewal" : "No",
+      "rental" : 0,
+      "maxCount" : 0,
+      "freeCycles" : "0"
+    }, {
+      "id" : 2173,
+      "name" : "MI MUNDO M_VO_TP_939",
+      "validity" : "Monthly",
+      "midnightExpiry" : "No",
+      "renewal" : "No",
+      "rental" : 0,
+      "maxCount" : 0,
+      "freeCycles" : "0"
+    } ],
+    "s4" : [ {
+      "id" : 1744,
+      "name" : "MI MUNDO S_VO",
+      "validity" : "Monthly",
+      "midnightExpiry" : "No",
+      "renewal" : "No",
+      "rental" : 0,
+      "maxCount" : 0,
+      "freeCycles" : "0"
+    } ],
+    "price" : "100",
+    "publicityCode" : "p",
+    "endDate" : "2026-04-30",
+    "isCorporate" : false
+  }
+}, {
   "name" : "Untitled Draft",
   "pkgType" : "POSTPAID",
   "pkgSubType" : "COMMERCIAL",
-  "savedOn" : "22 Apr 2026",
-  "savedTime" : "18:22",
+  "savedOn" : "23 Apr 2026",
+  "savedTime" : "17:43",
   "username" : "USER1",
-  "selectedSvcs_s2" : null,
-  "selectedSvcs_s3" : null,
-  "selectedSvcs_s4" : null,
-  "state" : { }
+  "selectedSvcs_s2" : "[\"VOICE\",\"SMS\",\"DATA\"]",
+  "selectedSvcs_s3" : "[\"VOICE\"]",
+  "selectedSvcs_s4" : "[\"VOICE\"]",
+  "state" : {
+    "s2" : [ {
+      "id" : "1747",
+      "name" : "MI MUNDO M_S",
+      "networkId" : "16"
+    } ],
+    "s3" : [ ],
+    "s4" : [ {
+      "id" : "1750",
+      "name" : "MI MUNDO M_VO",
+      "validity" : "Monthly",
+      "renewal" : "No",
+      "midnightExpiry" : "No",
+      "rental" : "",
+      "maxCount" : "",
+      "freeCycles" : "0"
+    } ],
+    "price" : "",
+    "publicityCode" : "",
+    "endDate" : "",
+    "isCorporate" : false
+  }
 } ]

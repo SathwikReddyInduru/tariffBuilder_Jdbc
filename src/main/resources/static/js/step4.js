@@ -1,30 +1,42 @@
-// ---------- Step4.js ----------
+// ---------- STATE ----------
 function getState() {
-    return JSON.parse(sessionStorage.getItem('builderState') || '{"s4":[]}');
+    const defaultState = { s2: [], s3: [], s4: [] };
+    const stored = sessionStorage.getItem('state');
+    return stored ? JSON.parse(stored) : defaultState;
 }
 
 function saveState(state) {
-    sessionStorage.setItem('builderState', JSON.stringify(state));
+    sessionStorage.setItem('state', JSON.stringify(state));
 }
 
 // ---------- INIT ----------
-window.addEventListener('DOMContentLoaded', () => {
-
+function initStep4() {
     const state = getState();
 
     if (!state.s4) state.s4 = [];
 
+    // Always re-render from state (handles both fresh load and bfcache restore)
+    document.getElementById('dropArea').innerHTML = '';
     state.s4.forEach(item => renderCard(item));
 
+    // Restore pills into in-memory array
+    selectedSvcs = [];
     const saved = JSON.parse(sessionStorage.getItem('selectedSvcs_s4') || '[]');
 
     saved.forEach(svc => {
         const pill = document.querySelector(`.svc-pill[data-svc="${svc}"]`);
         if (pill) pill.classList.add('active');
-        if (!selectedSvcs.includes(svc)) selectedSvcs.push(svc);
+        selectedSvcs.push(svc);
     });
 
     if (saved.length) refreshSidebar();
+}
+
+window.addEventListener('DOMContentLoaded', initStep4);
+
+// FIX: bfcache restores don't re-fire DOMContentLoaded — re-sync DOM from state on pageshow
+window.addEventListener('pageshow', (e) => {
+    if (e.persisted) initStep4();
 });
 
 // ---------- SERVICE TYPE ----------
@@ -45,9 +57,6 @@ function toggleSvc(service, el) {
     if (selectedSvcs.length === 0) {
         clearCenter();
     }
-    // else {
-    //     validateCenterPlans();
-    // }
 
     refreshSidebar();
 }
@@ -55,7 +64,6 @@ function toggleSvc(service, el) {
 function clearCenter() {
 
     const state = getState();
-
     state.s4 = [];
     saveState(state);
 
@@ -77,7 +85,7 @@ function validateCenterPlans() {
     };
 
     const validItems = state.s4.filter(item => {
-        const svc = svcMap[item.id];
+        const svc = svcMap[String(item.id)];
         return selectedSvcs.includes(svc);
     });
 
@@ -112,8 +120,6 @@ function refreshSidebar() {
                 return;
             }
 
-            const networkId = sessionStorage.getItem('networkId') || '';
-
             list.innerHTML = data.map(plan => `
                 <div class="draggable-item"
                     data-network-id="${plan.networkId}"
@@ -123,6 +129,10 @@ function refreshSidebar() {
                 </div>
             `).join('');
 
+            const searchInput = document.getElementById('librarySearchInput');
+            if (searchInput && searchInput.value) {
+                filterLibraryItems(searchInput.value.trim());
+            }
         })
         .catch(err => {
             console.error(err);
@@ -136,15 +146,18 @@ function addToCenter(id, name) {
     const state = getState();
     if (!state.s4) state.s4 = [];
 
-    if (state.s3 && state.s3.find(item => item.id === id)) {
-        alert(`"${name}" is already selected in DATP`);
+    // Cross-check: block if already in DATP (s3)
+    const s3Items = state.s3 || [];
+    if (s3Items.find(item => String(item.id) === String(id))) {
+        alert(`"${name}" is already selected in Default ATPs (DATP).`);
         return;
     }
 
-    if (state.s4.find(i => i.id === id)) return;
+    // Self-duplicate check
+    if (state.s4.find(i => String(i.id) === String(id))) return;
 
     const item = {
-        id: id,
+        id: String(id),
         name: name,
         validity: "Monthly",
         renewal: "No",
@@ -164,6 +177,8 @@ function addToCenter(id, name) {
 function renderCard(item) {
 
     const container = document.getElementById('dropArea');
+
+    if (document.getElementById(`card-s4-${item.id}`)) return;
 
     const card = document.createElement('div');
     card.className = "service-card";
@@ -232,7 +247,7 @@ function renderCard(item) {
 function updateField(id, key, value) {
 
     const state = getState();
-    const item = state.s4.find(i => i.id === id);
+    const item = state.s4.find(i => String(i.id) === String(id));
 
     if (item) {
         item[key] = value;
@@ -254,7 +269,7 @@ function removeItem(id) {
 
     const state = getState();
 
-    state.s4 = state.s4.filter(i => i.id !== id);
+    state.s4 = state.s4.filter(i => String(i.id) !== String(id));
     saveState(state);
 
     document.getElementById(`card-s4-${id}`)?.remove();
