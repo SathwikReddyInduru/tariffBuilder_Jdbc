@@ -116,8 +116,15 @@ function refreshSidebar() {
         .then(res => res.json())
         .then(data => {
 
+            // Always clear search regardless of result
+            const searchInput = document.getElementById('librarySearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input'));
+            }
+
             if (!data || !data.length) {
-                list.innerHTML = '<p class="sidebar-text">No plans</p>';
+                list.innerHTML = '<p class="sidebar-text">No Plans</p>';
                 return;
             }
 
@@ -125,7 +132,7 @@ function refreshSidebar() {
                 <div class="draggable-item"
                     data-network-id="${plan.networkId}"
                     data-package-id="${plan.servicePackageId}"
-                    onclick="addToCenter('${plan.servicePackageId}', '${plan.servicePackageName}')">
+                    onclick="addToCenter('${plan.servicePackageId}','${plan.servicePackageName}','${plan.networkId}')">
                     ${plan.servicePackageName}
                 </div>
             `).join('');

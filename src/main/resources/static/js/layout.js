@@ -1378,6 +1378,9 @@ function goNext() {
 
 (function initPlanHoverTooltip() {
 
+    // Disable tooltip on step2
+    if (window.location.pathname.includes('/builder/step2')) return;
+
     // ── Create a single shared tooltip element ──
     const tooltip = document.createElement('div');
     tooltip.id = 'planHoverTooltip';
@@ -1491,6 +1494,12 @@ function goNext() {
         const card = e.target.closest('[data-network-id][data-package-id], [data-networkid][data-packageid]');
         if (!card) return;
         if (!card.contains(e.relatedTarget)) {
+            hideTooltip();
+        }
+    });
+
+    document.addEventListener('mouseover', function (e) {
+        if (!e.target.closest('[data-network-id][data-package-id], [data-networkid][data-packageid]')) {
             hideTooltip();
         }
     });
