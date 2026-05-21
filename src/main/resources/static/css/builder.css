@@ -2415,32 +2415,145 @@ button:disabled {
     letter-spacing: 0.02em;
 }
 
-.clone-page-close-btn {
+/* ── Filter button (replaces Back button) ── */
+.clone-filter-btn {
     display: flex;
     align-items: center;
     gap: 6px;
     background: #f1f5f9;
     border: 1.5px solid #e2e8f0;
     border-radius: 10px;
-    height: 32px;
-    padding: 0 12px;
+    height: 36px;
+    padding: 0 14px;
     cursor: pointer;
     font-size: 12px;
     font-weight: 700;
-    color: #64748b;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    color: #3b5bdb;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
     letter-spacing: 0.02em;
     font-family: 'Plus Jakarta Sans', sans-serif;
+    flex-shrink: 0;
+    position: relative;
 }
 
-.clone-page-close-btn .material-icons {
-    font-size: 15px;
+.clone-filter-btn .material-icons {
+    font-size: 16px;
 }
 
-.clone-page-close-btn:hover {
-    background: #e2e8f0;
+.clone-filter-btn:hover {
+    background: #eef2ff;
+    border-color: #3b5bdb;
+}
+
+.clone-filter-btn.active {
+    background: #3b5bdb;
+    border-color: #3b5bdb;
+    color: #fff;
+}
+
+.clone-filter-badge {
+    background: #ef233c;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 99px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    margin-left: 2px;
+}
+
+/* ── Filter Modal specific overrides ── */
+.tp-filter-modal {
+    width: 440px;
+    max-width: 94vw;
+    padding: 28px 28px 24px;
+}
+
+/* section label */
+.tpf-section-label {
+    font-size: 13px;
+    color: #94a3b8;
+    font-weight: 600;
+    margin-bottom: 12px;
+    letter-spacing: 0.01em;
+}
+
+/* chip row */
+.tpf-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* individual chip */
+.tpf-chip {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
     color: #1e293b;
-    border-color: #cbd5e1;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 18px;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+    line-height: 1;
+}
+
+.tpf-chip:hover {
+    border-color: #94a3b8;
+}
+
+.tpf-chip.selected {
+    border-color: #1e293b;
+    background: #fff;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+/* footer */
+.tpf-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.tpf-clear-btn {
+    background: none;
+    border: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1e293b;
+    cursor: pointer;
+    text-decoration: underline;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    padding: 0;
+}
+
+.tpf-show-btn {
+    background: #cbd5e1;
+    border: none;
+    border-radius: 999px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px 28px;
+    cursor: not-allowed;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: background 0.2s, cursor 0.2s;
+}
+
+.tpf-show-btn:not(:disabled) {
+    background: #1e293b;
+    cursor: pointer;
 }
 
 /* ── Search bar ── */
@@ -2649,6 +2762,29 @@ button:disabled {
     gap: 16px;
 }
 
+/* Multi-category row */
+.tp-buckets-row--multi {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+}
+
+/* Thin vertical separator between buckets */
+.tp-meta-sep {
+    width: 1px;
+    height: 28px;
+    background: rgba(148,163,184,0.35);
+    flex-shrink: 0;
+    align-self: center;
+}
+
+/* Small emoji/icon above the value */
+.tp-meta-icon {
+    font-size: 12px;
+    line-height: 1;
+    margin-bottom: 1px;
+}
+
 .tp-meta-divider {
     width: 1px;
     height: 30px;
@@ -2781,6 +2917,7 @@ button:disabled {
 
 /* ── Footer removed ── */
 
+/* ── TP Details Modal ─────────────────────────────────── */
 .tp-modal-overlay {
     position: fixed;
     inset: 0;
@@ -2797,29 +2934,25 @@ button:disabled {
 }
 
 .tp-modal {
-    width: 520px;
-    max-width: 92%;
+    width: 480px;
+    max-width: 94vw;
     max-height: 90vh;
     overflow-y: auto;
     background: #ffffff;
-    border-radius: 24px;
-    padding: 28px;
+    border-radius: 28px;
+    padding: 32px 28px 28px;
     position: relative;
-    animation: tpModalIn 0.25s ease;
+    animation: tpModalIn 0.22s ease;
+    scrollbar-width: thin;
+    scrollbar-color: #e2e8f0 transparent;
 }
 
 @keyframes tpModalIn {
-    from {
-        transform: translateY(20px) scale(0.96);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-    }
+    from { transform: translateY(24px) scale(0.96); opacity: 0; }
+    to   { transform: translateY(0)    scale(1);    opacity: 1; }
 }
 
+/* ── close button ── */
 .tp-modal-close {
     position: absolute;
     top: 16px;
@@ -2831,75 +2964,418 @@ button:disabled {
     border-radius: 50%;
     cursor: pointer;
     font-size: 16px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+.tp-modal-close:hover { background: #e2e8f0; }
+
+/* ── plan name (title) ── */
+.tp-modal-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 6px;
+    padding-right: 40px;
+    line-height: 1.2;
 }
 
-.tp-modal-title {
-    font-size: 30px;
-    font-weight: 800;
-    margin-bottom: 18px;
-    color: #0f172a;
+/* ── badge below title ── */
+.tp-modal-badge {
+    display: inline-block;
+    background: #fef08a;
+    color: #713f12;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 3px 10px;
+    margin-bottom: 22px;
 }
+
+/* ── price + buckets row ── */
+/* ── price + buckets card ── */
+.tp-modal-hero {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 16px 20px;
+}
+
+.tp-modal-price-block {}
 
 .tp-modal-price {
-    font-size: 42px;
+    font-size: 36px;
     font-weight: 800;
-    margin-bottom: 20px;
+    color: #0f172a;
+    line-height: 1;
 }
 
-.tp-modal-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-    margin-bottom: 24px;
-}
-
-.tp-modal-item {
-    background: #f8fafc;
-    border-radius: 14px;
-    padding: 16px;
-}
-
-.tp-modal-label {
-    font-size: 11px;
-    color: #64748b;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-}
-
-.tp-modal-value {
+.tp-modal-price sup {
     font-size: 18px;
     font-weight: 700;
+    vertical-align: top;
+    margin-top: 5px;
+    display: inline-block;
+}
+
+.tp-modal-price-gst {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+/* vertical divider between price block and buckets */
+.tp-modal-hero-divider {
+    width: 1.5px;
+    height: 38px;
+    background: #e2e8f0;
+    flex-shrink: 0;
+}
+
+/* buckets: horizontal row, each column stacked vertically */
+.tp-modal-buckets {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.tp-modal-bucket {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    /* no border, no divider */
+}
+
+.tp-modal-bucket-val {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.15;
+}
+
+.tp-modal-bucket-key {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+    text-transform: lowercase;
+}
+
+/* ── OTT icons + bullet notes row ── */
+.tp-modal-ott-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 24px;
+    padding: 14px 0;
+    border-top: 1px dashed #e2e8f0;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.tp-modal-ott-icons {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    padding-top: 2px;
+}
+
+.tp-modal-ott-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    object-fit: cover;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+
+.tp-modal-ott-notes {
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.tp-modal-ott-notes li {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.tp-modal-ott-notes li::before {
+    content: '•  ';
+    color: #94a3b8;
+}
+
+/* ── "additional benefits" section ── */
+.tp-modal-benefits-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 16px;
+}
+
+.tp-modal-ott-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.tp-modal-ott-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.tp-modal-ott-item-img {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    object-fit: cover;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.tp-modal-ott-item-desc {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+/* ── "your benefits" paragraph ── */
+.tp-modal-your-benefits {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 18px;
+    margin-top: 4px;
+}
+
+.tp-modal-your-benefits-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 10px;
+}
+
+.tp-modal-your-benefits-text {
+    font-size: 13.5px;
+    color: #64748b;
+    line-height: 1.7;
+}
+
+/* ══════════════════════════════════════════════════════════
+   Clone Tree Modal  (.ctm-*)
+   ══════════════════════════════════════════════════════════ */
+
+.ctm-modal {
+    width: 460px;
+    max-width: 94vw;
+    padding: 28px 28px 24px;
+}
+
+/* ── header ── */
+.ctm-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding-right: 36px;
+}
+
+.ctm-header-icon {
+    font-size: 20px;
+    color: #3b5bdb;
+}
+
+.ctm-header-title {
+    font-size: 18px;
+    font-weight: 800;
     color: #0f172a;
 }
 
-.tp-modal-benefits {
-    margin-top: 20px;
-    border-top: 1px solid #e2e8f0;
-    padding-top: 20px;
+/* ── body ── */
+.ctm-body {
+    min-height: 80px;
 }
 
-.tp-modal-benefits h4 {
-    margin-bottom: 12px;
+/* ── loading / error states ── */
+.ctm-loading,
+.ctm-error {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 24px 0;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.ctm-error { color: #e63946; }
+
+@keyframes ctmSpin {
+    to { transform: rotate(360deg); }
+}
+
+.ctm-spin {
+    animation: ctmSpin 0.9s linear infinite;
     font-size: 18px;
+    color: #3b5bdb;
 }
 
-.tp-modal-benefits ul {
-    padding-left: 18px;
+/* ── tree ── */
+.ctm-tree {
+    padding: 4px 0 8px;
+}
+
+/* every node pill */
+.ctm-node {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 16px;
+    min-width: 180px;
+    transition: border-color 0.15s;
+}
+
+.ctm-node--root {
+    background: #eef2ff;
+    border-color: #3b5bdb;
+    border-width: 2px;
+}
+
+.ctm-node--tp {
+    background: #f0fdf4;
+    border-color: #22c55e;
+}
+
+.ctm-node--datp {
+    background: #fff7ed;
+    border-color: #f97316;
+}
+
+.ctm-node--aatp {
+    background: #fdf4ff;
+    border-color: #a855f7;
+}
+
+.ctm-node-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    color: inherit;
+}
+
+.ctm-node--root  .ctm-node-icon { color: #3b5bdb; }
+.ctm-node--tp    .ctm-node-icon { color: #16a34a; }
+.ctm-node--datp  .ctm-node-icon { color: #ea6c00; }
+.ctm-node--aatp  .ctm-node-icon { color: #9333ea; }
+
+.ctm-node-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.ctm-node-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    line-height: 1;
+}
+
+.ctm-node-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.3;
+}
+
+/* ── branch / connector lines ── */
+.ctm-branch {
+    display: flex;
+    flex-direction: column;
+    padding-left: 24px;
+    position: relative;
+    margin-top: 0;
+}
+
+.ctm-branch--l2 {
+    padding-left: 36px;
+}
+
+.ctm-v-line {
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 16px;
+    width: 2px;
+    background: #e2e8f0;
+    border-radius: 2px;
+}
+
+.ctm-branch--l2 .ctm-v-line {
+    left: 18px;
+}
+
+.ctm-child {
+    display: flex;
+    align-items: center;
+    margin-top: 12px;
+    position: relative;
+}
+
+.ctm-connector {
+    width: 20px;
+    height: 2px;
+    background: #e2e8f0;
+    flex-shrink: 0;
+    margin-right: 8px;
+    border-radius: 2px;
+}
+
+/* ── action buttons ── */
+.ctm-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid #f1f5f9;
+    justify-content: flex-end;
+}
+
+.ctm-btn {
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 22px;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: opacity 0.15s, transform 0.1s;
+}
+
+.ctm-btn:hover  { opacity: 0.88; transform: translateY(-1px); }
+.ctm-btn:active { transform: translateY(0); }
+
+.ctm-btn--cancel {
+    background: #f1f5f9;
     color: #475569;
 }
 
-.tp-modal-footer {
-    margin-top: 28px;
+.ctm-btn--modify {
+    background: #eef2ff;
+    color: #3b5bdb;
 }
 
-.tp-modal-recharge {
-    width: 100%;
-    border: none;
-    background: #ef233c;
-    color: white;
-    font-size: 15px;
-    font-weight: 700;
-    border-radius: 999px;
-    padding: 16px;
-    cursor: pointer;
+.ctm-btn--clone {
+    background: #3b5bdb;
+    color: #ffffff;
 }

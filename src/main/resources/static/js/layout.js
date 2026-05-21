@@ -1650,6 +1650,65 @@ const TP_PLANS_MOCK = [
     },
 ];
 
+// ── Filter state ──────────────────────────────────────────
+const _tpFilter = { category: null, validity: null, price: null };
+
+function openFilterModal() {
+    document.getElementById('tpFilterModal').classList.add('active');
+}
+
+function _filterOverlayClick(e) {
+    if (e.target === document.getElementById('tpFilterModal')) {
+        document.getElementById('tpFilterModal').classList.remove('active');
+    }
+}
+
+function _tpfChip(btn, group) {
+    // toggle within group (single-select per group)
+    const row = document.getElementById('tpf-' + group);
+    row.querySelectorAll('.tpf-chip').forEach(c => c.classList.remove('selected'));
+    const alreadySelected = _tpFilter[group] === btn.dataset.val;
+    if (alreadySelected) {
+        _tpFilter[group] = null;
+    } else {
+        btn.classList.add('selected');
+        _tpFilter[group] = btn.dataset.val;
+    }
+    _tpfUpdateFooter();
+}
+
+function _tpfUpdateFooter() {
+    const anyActive = _tpFilter.category || _tpFilter.validity || _tpFilter.price;
+    const showBtn = document.getElementById('tpfShowBtn');
+    showBtn.disabled = !anyActive;
+
+    // update badge on Filter button
+    const count = [_tpFilter.category, _tpFilter.validity, _tpFilter.price].filter(Boolean).length;
+    const badge = document.getElementById('cloneFilterBadge');
+    const filterBtn = document.getElementById('cloneFilterBtn');
+    if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'inline-flex';
+        filterBtn.classList.add('active');
+    } else {
+        badge.style.display = 'none';
+        filterBtn.classList.remove('active');
+    }
+}
+
+function _tpfClearAll() {
+    _tpFilter.category = null;
+    _tpFilter.validity = null;
+    _tpFilter.price = null;
+    document.querySelectorAll('.tpf-chip').forEach(c => c.classList.remove('selected'));
+    _tpfUpdateFooter();
+}
+
+function _tpfApply() {
+    document.getElementById('tpFilterModal').classList.remove('active');
+    _applyTpSearch(document.getElementById('cloneSearchInput')?.value || '');
+}
+
 // ── Selection state ───────────────────────────────────────
 const _tpSelected = new Set();
 
@@ -1673,6 +1732,7 @@ function openClone() {
 
     // 3. Show the clone page container (flex, then animate in)
     _tpSelected.clear();
+    _tpfClearAll();   // reset filters on every open
     page.style.display = 'flex';
 
     // Clear search input
@@ -1771,6 +1831,50 @@ const _OTT_ICONS = [
 // ── All loaded plans (for search filtering) ───────────────
 let _allTpPlans = [];
 
+// ── Category display order & icons ───────────────────────
+const _CAT_ORDER = ['VOICE', 'SMS', 'DATA', 'VOICE_SMS'];
+const _CAT_ICON = {
+    VOICE: '📞',
+    SMS: '💬',
+    DATA: '📶',
+    VOICE_SMS: '📱',
+};
+
+// ── Group flat plan array by tariffPackageDesc ────────────
+function _groupPlansByDesc(plans) {
+    const map = new Map();
+    plans.forEach(p => {
+        const key = p.tariffPackageDesc || '';
+        if (!map.has(key)) {
+            map.set(key, {
+                tariffPackageDesc: key,
+                activationFee: p.activationFee,
+                rentalType: p.rentalType,
+                buckets: [],          // { balanceCategory, bucketUnitValue }
+                _raw: [],             // all original rows, for modal
+            });
+        }
+        const group = map.get(key);
+        // Keep the highest activationFee as the representative price
+        if (Number(p.activationFee) > Number(group.activationFee)) {
+            group.activationFee = p.activationFee;
+        }
+        group.buckets.push({ balanceCategory: p.balanceCategory, bucketUnitValue: p.bucketUnitValue });
+        group._raw.push(p);
+    });
+
+    // Sort buckets within each group: VOICE → SMS → DATA → others
+    map.forEach(group => {
+        group.buckets.sort((a, b) => {
+            const ai = _CAT_ORDER.indexOf(a.balanceCategory);
+            const bi = _CAT_ORDER.indexOf(b.balanceCategory);
+            return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+        });
+    });
+
+    return Array.from(map.values());
+}
+
 function _renderTpCards(plans) {
     _allTpPlans = plans;
     _applyTpSearch('');
@@ -1782,7 +1886,9 @@ function _applyTpSearch(query) {
     if (!grid) return;
 
     const q = query.trim().toLowerCase();
-    const filtered = q
+
+    // 1. Text search filter on the flat list
+    let flatFiltered = q
         ? _allTpPlans.filter(p => {
             const fee = String(p.activationFee ?? '');
             const cat = (p.balanceCategory || '').toLowerCase();
@@ -1791,27 +1897,48 @@ function _applyTpSearch(query) {
         })
         : _allTpPlans;
 
-    if (countBadge) countBadge.textContent = filtered.length + ' plan' + (filtered.length !== 1 ? 's' : '');
+    // 2. Category filter — keep only rows that have the selected balanceCategory
+    if (_tpFilter.category && _tpFilter.category !== 'ALL') {
+        const cat = _tpFilter.category.toUpperCase();
+        // keep only groups that contain at least one row with this category
+        const matchingDescs = new Set(
+            flatFiltered.filter(p => (p.balanceCategory || '').toUpperCase() === cat)
+                .map(p => p.tariffPackageDesc)
+        );
+        flatFiltered = flatFiltered.filter(p => matchingDescs.has(p.tariffPackageDesc));
+    }
+
+    // 3. Group
+    let groups = _groupPlansByDesc(flatFiltered);
+
+    // 4. Price sort
+    if (_tpFilter.price === 'asc') {
+        groups.sort((a, b) => Number(a.activationFee) - Number(b.activationFee));
+    } else if (_tpFilter.price === 'desc') {
+        groups.sort((a, b) => Number(b.activationFee) - Number(a.activationFee));
+    }
+
+    // (validity filter: API doesn't return validity; stub for future use)
+
+    if (countBadge) countBadge.textContent = groups.length + ' plan' + (groups.length !== 1 ? 's' : '');
 
     grid.innerHTML = '';
 
-    if (!filtered.length) {
+    if (!groups.length) {
         grid.innerHTML = '<p style="padding:24px;color:var(--text-muted,#888)">No plans match your search.</p>';
         return;
     }
 
-    filtered.forEach((plan, i) => {
-        const planId = 'tp-api-' + _allTpPlans.indexOf(plan);
+    // OTT icons strip — always show all 6
+    const ottHtml = _OTT_ICONS.map(o =>
+        `<span class="tp-ott-icon" style="background:${o.bg}" title="${o.title}">${o.label}</span>`
+    ).join('');
+
+    groups.forEach((group, i) => {
+        const planId = 'tp-grp-' + encodeURIComponent(group.tariffPackageDesc);
         const selected = _tpSelected.has(planId);
 
-        const card = document.createElement('div');
-        card.className = 'tp-plan-card' + (selected ? ' selected' : '');
-        card.dataset.planId = planId;
-        card.style.setProperty('--card-i', i);
-        // card.onclick = () => _toggleTpSelect(planId);
-
-        // Price display — show ₹ if number > 0, else show "Free"
-        const feeNum = Number(plan.activationFee);
+        const feeNum = Number(group.activationFee);
         const priceHtml = `
             <span class="tp-price-main">
                 <sup>₹</sup>${feeNum.toLocaleString('en-IN')}
@@ -1819,29 +1946,35 @@ function _applyTpSearch(query) {
             <span class="tp-price-period">/m+GST</span>
         `;
 
-        // Meta: value + category (e.g. "23.44 MB" + "VOICE")
-        const metaVal = plan.bucketUnitValue || '-';
-        const metaKey = (plan.balanceCategory || 'DATA').toUpperCase();
+        // Build one column per bucket (VOICE | SMS | DATA …)
+        const bucketsHtml = group.buckets.map(b => {
+            const icon = _CAT_ICON[b.balanceCategory] || '📦';
+            const val = b.bucketUnitValue || '-';
+            const cat = b.balanceCategory || '';
+            return `
+                <div class="tp-meta-col">
+                    <span class="tp-meta-icon">${icon}</span>
+                    <span class="tp-meta-val">${val}</span>
+                    <span class="tp-meta-key">${cat}</span>
+                </div>`;
+        }).join('<div class="tp-meta-sep"></div>');
 
-        // OTT icons strip — always show all 6
-        const ottHtml = _OTT_ICONS.map(o =>
-            `<span class="tp-ott-icon" style="background:${o.bg}" title="${o.title}">${o.label}</span>`
-        ).join('');
+        const card = document.createElement('div');
+        card.className = 'tp-plan-card' + (selected ? ' selected' : '');
+        card.dataset.planId = planId;
+        card.style.setProperty('--card-i', i);
 
         card.innerHTML = `
             <div class="tp-check-badge"><span class="material-icons">check</span></div>
 
-            <div class="tp-tag">Individual plan</div>
+            <div class="tp-tag">${group.rentalType || 'Individual plan'}</div>
 
             <div class="tp-price-only">
                 ${priceHtml}
             </div>
 
-            <div class="tp-buckets-row">
-                <div class="tp-meta-col">
-                    <span class="tp-meta-val">${metaVal}</span>
-                    <span class="tp-meta-key">${metaKey}</span>
-                </div>
+            <div class="tp-buckets-row tp-buckets-row--multi">
+                ${bucketsHtml}
             </div>
 
             <div class="tp-ott-strip">${ottHtml}</div>
@@ -1849,16 +1982,16 @@ function _applyTpSearch(query) {
             <div class="tp-card-actions">
                 <button
                     class="tp-btn-details"
-                    onclick='event.stopPropagation();openTpDetails(${JSON.stringify(JSON.stringify(plan))})'
+                    onclick='event.stopPropagation();openTpDetails(${JSON.stringify(JSON.stringify(group))})'
                 >
                     View Details
                 </button>
 
                 <button
                     class="tp-btn-select"
-                    onclick="event.stopPropagation();_toggleTpSelect('${planId}')"
+                    onclick="event.stopPropagation();openCloneTree('${encodeURIComponent(group.tariffPackageDesc)}', ${group._raw[0]?.tariffPackageId || 'null'})"
                 >
-                    ${selected ? 'Selected' : 'Select'}
+                    Select
                 </button>
             </div>
         `;
@@ -1890,64 +2023,246 @@ function handleCloneAction() {
     alert(`Cloning ${ids.length} plan(s).\n(Wire to your POST /api/clone endpoint)`);
 }
 
-function openTpDetails(planData) {
+// ── Clone Tree Modal ──────────────────────────────────────
+async function openCloneTree(encodedDesc, tariffPackageId) {
+    const tpDesc = decodeURIComponent(encodedDesc);
+    const modal = document.getElementById('cloneTreeModal');
+    const body = document.getElementById('cloneTreeBody');
 
-    const plan = JSON.parse(planData);
+    // Store for action buttons
+    modal.dataset.tpDesc = tpDesc;
+    modal.dataset.tpId = tariffPackageId || '';
+
+    // Show modal with loading state
+    body.innerHTML = `<div class="ctm-loading">
+        <span class="material-icons ctm-spin">refresh</span>
+        Loading plan structure…
+    </div>`;
+    modal.classList.add('active');
+
+    // Fetch
+    try {
+        const networkId = (typeof NETWORK_ID !== 'undefined' && NETWORK_ID) ? NETWORK_ID : '';
+        const res = await fetch(`/details?networkId=${networkId}&tariffPackageId=${tariffPackageId}`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const rows = await res.json();
+        _renderCloneTree(body, tpDesc, rows);
+    } catch (err) {
+        console.error('Clone tree fetch error:', err);
+        body.innerHTML = `<div class="ctm-error">
+            <span class="material-icons">error_outline</span>
+            Failed to load plan details. Please try again.
+        </div>`;
+    }
+}
+
+function _renderCloneTree(container, tpDesc, rows) {
+    // Separate by tariffPlanType
+    const tpRow = rows.find(r => r.tariffPlanType === 'TP');
+    const datpRows = rows.filter(r => r.tariffPlanType === 'DATP');
+    const aatpRows = rows.filter(r => r.tariffPlanType === 'AATP');
+
+    // Name fallbacks
+    const tpName = tpRow?.chargeDesc || tpRow?.chargeId || 'TP';
+    const datpName = r => r.chargeDesc || r.chargeId || 'DATP';
+    const aatpName = r => r.chargeDesc || r.chargeId || 'AATP';
+
+    // Build child rows for TP node
+    const childrenHtml = [
+        ...datpRows.map(r => `
+            <div class="ctm-child">
+                <div class="ctm-connector"></div>
+                <div class="ctm-node ctm-node--datp">
+                    <span class="ctm-node-icon material-icons">add_circle_outline</span>
+                    <div class="ctm-node-info">
+                        <span class="ctm-node-label">DATP</span>
+                        <span class="ctm-node-name">${datpName(r)}</span>
+                    </div>
+                </div>
+            </div>`),
+        ...aatpRows.map(r => `
+            <div class="ctm-child">
+                <div class="ctm-connector"></div>
+                <div class="ctm-node ctm-node--aatp">
+                    <span class="ctm-node-icon material-icons">shopping_cart_outlined</span>
+                    <div class="ctm-node-info">
+                        <span class="ctm-node-label">AATP</span>
+                        <span class="ctm-node-name">${aatpName(r)}</span>
+                    </div>
+                </div>
+            </div>`),
+    ].join('');
+
+    container.innerHTML = `
+        <div class="ctm-tree">
+
+            <!-- Root: tariffPackageDesc -->
+            <div class="ctm-node ctm-node--root">
+                <span class="ctm-node-icon material-icons">inventory_2</span>
+                <div class="ctm-node-info">
+                    <span class="ctm-node-label">Plan</span>
+                    <span class="ctm-node-name">${tpDesc}</span>
+                </div>
+            </div>
+
+            <!-- Level 1 connector + TP child -->
+            <div class="ctm-branch">
+                <div class="ctm-v-line"></div>
+                <div class="ctm-child">
+                    <div class="ctm-connector"></div>
+                    <div class="ctm-node ctm-node--tp">
+                        <span class="ctm-node-icon material-icons">receipt_long</span>
+                        <div class="ctm-node-info">
+                            <span class="ctm-node-label">TP</span>
+                            <span class="ctm-node-name">${tpName}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Level 2: DATP + AATP children of TP -->
+                ${(datpRows.length || aatpRows.length) ? `
+                <div class="ctm-branch ctm-branch--l2">
+                    <div class="ctm-v-line"></div>
+                    ${childrenHtml}
+                </div>` : ''}
+            </div>
+
+        </div>
+    `;
+}
+
+function closeCloneTree() {
+    document.getElementById('cloneTreeModal').classList.remove('active');
+}
+
+function _cloneTreeOverlayClick(e) {
+    if (e.target === document.getElementById('cloneTreeModal')) closeCloneTree();
+}
+
+function _cloneTreeAction(action) {
+    const modal = document.getElementById('cloneTreeModal');
+    const tpDesc = modal.dataset.tpDesc;
+    const tpId = modal.dataset.tpId;
+    if (action === 'clone') {
+        // Wire to your POST /clone endpoint
+        alert(`Clone: ${tpDesc} (id: ${tpId})`);
+    } else if (action === 'modify') {
+        alert(`Modify: ${tpDesc}`);
+    } else {
+        closeCloneTree();
+    }
+}
+
+function openTpDetails(groupData) {
+
+    const group = JSON.parse(groupData);
 
     const modal = document.getElementById('tpDetailsModal');
     const content = document.getElementById('tpModalContent');
 
-    const fee = Number(plan.activationFee || 0);
+    const fee = Number(group.activationFee || 0);
+
+    // ── Real OTT logos (direct CDN URLs) ──────────────────
+    const OTT_SERVICES = [
+        {
+            name: 'JioHotstar',
+            src: 'https://www.jiohotstar.com/favicon.ico',
+            fallback: 'https://play-lh.googleusercontent.com/N8wdJc9fXHWNFSHjFNBmMLBIsHTMVLvQWm0wAAOOVLvPz6jPE0O3hgGiHCBUaGnETQ=s96',
+            desc: 'TV Shows | Movies | Originals | Sports',
+        },
+        {
+            name: 'ZEE5',
+            src: 'https://akamaividz2.zee5.com/image/upload/w_559,h_559,c_scale,f_webp,q_auto:eco/resources/0-0-shorts/zeefavicon.png',
+            fallback: 'https://play-lh.googleusercontent.com/K2YZMc-arGqQrPjBT_BBORfTCNMvkVYi6hk1UHm7nzAE3-pjBYMBvZlRmFAZsXKlg7Y=s96',
+            desc: 'Award Winning Movies | Web series | TV Shows in 18 languages',
+        },
+        {
+            name: 'SonyLIV',
+            src: 'https://play-lh.googleusercontent.com/5kFbAj5LrFKKb42jDAfZ-rSR7nZ5kZSgd3xyRRn2OJUyFCxXU9V9pCvMWyGKWi2xSGM=s96',
+            fallback: 'https://play-lh.googleusercontent.com/5kFbAj5LrFKKb42jDAfZ-rSR7nZ5kZSgd3xyRRn2OJUyFCxXU9V9pCvMWyGKWi2xSGM=s96',
+            desc: 'Popular TV Shows | New series | Movies',
+        },
+    ];
+
+    // ── Filter buckets: only VOICE, SMS, DATA ─────────────
+    const ALLOWED = ['VOICE', 'SMS', 'DATA'];
+    const buckets = (group.buckets || []).filter(b => ALLOWED.includes((b.balanceCategory || '').toUpperCase()));
+
+    const hasVoice = buckets.some(b => b.balanceCategory === 'VOICE');
+    const hasSms = buckets.some(b => b.balanceCategory === 'SMS');
+    const hasData = buckets.some(b => b.balanceCategory === 'DATA');
+
+    // ── Dynamic notes based on missing categories ──────────
+    const notes = [];
+    if (!hasSms) notes.push('No Outgoing SMS');
+    if (!hasVoice) notes.push('No Voice calls');
+    if (!hasData) notes.push('No Data included');
+    if (notes.length === 0) notes.push('All services included', 'Full voice, SMS & data access');
+    const notesHtml = notes.map(n => `<li>${n}</li>`).join('');
+
+    // ── Price block ────────────────────────────────────────
+    const priceSup = `
+        <div class="tp-modal-price"><sup>₹</sup>${fee.toLocaleString('en-IN')}</div>
+        <div class="tp-modal-price-gst">+GST</div>`;
+
+    // ── Buckets: value on top, label below, no dividers ───
+    const bucketsHtml = buckets.map(b => `
+        <div class="tp-modal-bucket">
+            <span class="tp-modal-bucket-val">${b.bucketUnitValue || '-'}</span>
+            <span class="tp-modal-bucket-key">${b.balanceCategory.toLowerCase()}</span>
+        </div>`).join('');
+
+    // ── OTT strip (small icons beside notes) ──────────────
+    const ottStripHtml = OTT_SERVICES.slice(0, 2).map(o =>
+        `<img class="tp-modal-ott-img" src="${o.src}"
+              alt="${o.name}"
+              onerror="this.src='${o.fallback}'">`
+    ).join('');
+
+    // ── Full OTT benefit list ──────────────────────────────
+    const ottListHtml = OTT_SERVICES.map(o => `
+        <div class="tp-modal-ott-item">
+            <img class="tp-modal-ott-item-img" src="${o.src}"
+                 alt="${o.name}"
+                 onerror="this.src='${o.fallback}'">
+            <span class="tp-modal-ott-item-desc">${o.desc}</span>
+        </div>`).join('');
 
     content.innerHTML = `
-        <div class="tp-modal-title">
-            Pack Details
-        </div>
+        <div class="tp-modal-title">${group.tariffPackageDesc || 'Pack Details'}</div>
 
-        <div class="tp-modal-price">
-            ₹${fee.toLocaleString('en-IN')}
-        </div>
+        <div class="tp-modal-badge">${group.rentalType || 'Individual plan'}</div>
 
-        <div class="tp-modal-grid">
-
-            <div class="tp-modal-item">
-                <div class="tp-modal-label">Data</div>
-                <div class="tp-modal-value">
-                    ${plan.bucketUnitValue || '-'}
-                </div>
+        <div class="tp-modal-hero">
+            <div class="tp-modal-price-block">
+                ${priceSup}
             </div>
-
-            <div class="tp-modal-item">
-                <div class="tp-modal-label">Category</div>
-                <div class="tp-modal-value">
-                    ${plan.balanceCategory || '-'}
-                </div>
+            <div class="tp-modal-hero-divider"></div>
+            <div class="tp-modal-buckets">
+                ${bucketsHtml}
             </div>
-
-            <div class="tp-modal-item">
-                <div class="tp-modal-label">Plan Type</div>
-                <div class="tp-modal-value">
-                    Individual
-                </div>
-            </div>
-
         </div>
 
-        <div class="tp-modal-benefits">
-            <h4>Additional Benefits</h4>
-
-            <ul>
-                <li>Unlimited Calls</li>
-                <li>OTT Subscription Access</li>
-                <li>5G Enabled</li>
-                <li>Premium Content Access</li>
-            </ul>
+        <div class="tp-modal-ott-row">
+            <div class="tp-modal-ott-icons">${ottStripHtml}</div>
+            <ul class="tp-modal-ott-notes">${notesHtml}</ul>
         </div>
 
-        <div class="tp-modal-footer">
-            <button class="tp-modal-recharge">
-                Close
-            </button>
+        <div class="tp-modal-benefits-title">additional benefits</div>
+
+        <div class="tp-modal-ott-list">
+            ${ottListHtml}
+        </div>
+
+        <div class="tp-modal-your-benefits">
+            <div class="tp-modal-your-benefits-title">your benefits</div>
+            <p class="tp-modal-your-benefits-text">
+                Get JioHotstar Mobile + 19 more OTTs including ZEE5,
+                SonyLIV, FanCode, Lionsgate Play &amp; more. Add-on
+                ${hasData ? buckets.find(b => b.balanceCategory === 'DATA').bucketUnitValue + ' Data.' : 'No extra data.'}
+                ${!hasSms ? 'No service validity.' : ''}
+                Pack validity 28 days.
+            </p>
         </div>
     `;
 

@@ -162,9 +162,10 @@
                         <input type="text" id="cloneSearchInput" class="clone-search-input"
                             placeholder="Search by price, name or category…" oninput="_applyTpSearch(this.value)" />
                     </div>
-                    <button class="clone-page-close-btn" onclick="closeClonePage()">
-                        <span class="material-icons">arrow_back</span>
-                        Back
+                    <button class="clone-filter-btn" id="cloneFilterBtn" onclick="openFilterModal()">
+                        <span class="material-icons">tune</span>
+                        Filter
+                        <span class="clone-filter-badge" id="cloneFilterBadge" style="display:none">0</span>
                     </button>
                 </div>
 
@@ -231,6 +232,67 @@
                 <span>Saved Configs</span> <span class="material-icons close-btn" onclick="closeSaved()"> close </span>
             </div>
             <div class="draft-content" id="savedOverlayList"></div>
+        </div>
+    </div>
+
+    <!-- ── Clone Tree Modal ───────────────────────────────────── -->
+    <div id="cloneTreeModal" class="tp-modal-overlay" onclick="_cloneTreeOverlayClick(event)">
+        <div class="tp-modal ctm-modal">
+
+            <button class="tp-modal-close" onclick="closeCloneTree()">✕</button>
+
+            <div class="ctm-header">
+                <span class="material-icons ctm-header-icon">account_tree</span>
+                <span class="ctm-header-title">Plan Structure</span>
+            </div>
+
+            <!-- Tree body injected by JS -->
+            <div id="cloneTreeBody" class="ctm-body"></div>
+
+            <!-- Action buttons -->
+            <div class="ctm-actions">
+                <button class="ctm-btn ctm-btn--cancel" onclick="_cloneTreeAction('cancel')">Cancel</button>
+                <button class="ctm-btn ctm-btn--modify" onclick="_cloneTreeAction('modify')">Modify</button>
+                <button class="ctm-btn ctm-btn--clone" onclick="_cloneTreeAction('clone')">Clone</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Filter Modal ───────────────────────────────────────── -->
+    <div id="tpFilterModal" class="tp-modal-overlay" onclick="_filterOverlayClick(event)">
+        <div class="tp-modal tp-filter-modal">
+
+            <!-- category -->
+            <div class="tpf-section-label">category</div>
+            <div class="tpf-chip-row" id="tpf-category">
+                <button class="tpf-chip" data-val="ALL" onclick="_tpfChip(this,'category')">All</button>
+                <button class="tpf-chip" data-val="VOICE" onclick="_tpfChip(this,'category')">Voice</button>
+                <button class="tpf-chip" data-val="SMS" onclick="_tpfChip(this,'category')">SMS</button>
+                <button class="tpf-chip" data-val="DATA" onclick="_tpfChip(this,'category')">Data</button>
+            </div>
+
+            <!-- validity -->
+            <div class="tpf-section-label" style="margin-top:22px">validity</div>
+            <div class="tpf-chip-row" id="tpf-validity">
+                <button class="tpf-chip" data-val="28" onclick="_tpfChip(this,'validity')">28 Days</button>
+                <button class="tpf-chip" data-val="56" onclick="_tpfChip(this,'validity')">56 Days</button>
+                <button class="tpf-chip" data-val="84" onclick="_tpfChip(this,'validity')">84 Days</button>
+                <button class="tpf-chip" data-val="365" onclick="_tpfChip(this,'validity')">365 Days</button>
+            </div>
+
+            <!-- price sort -->
+            <div class="tpf-section-label" style="margin-top:22px">price</div>
+            <div class="tpf-chip-row" id="tpf-price">
+                <button class="tpf-chip" data-val="asc" onclick="_tpfChip(this,'price')">low to high</button>
+                <button class="tpf-chip" data-val="desc" onclick="_tpfChip(this,'price')">high to low</button>
+            </div>
+
+            <!-- footer -->
+            <div class="tpf-footer">
+                <button class="tpf-clear-btn" onclick="_tpfClearAll()">clear all</button>
+                <button class="tpf-show-btn" id="tpfShowBtn" disabled onclick="_tpfApply()">show results</button>
+            </div>
         </div>
     </div>
 
