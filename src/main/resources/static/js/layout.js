@@ -30,8 +30,8 @@ function saveDraftOnExit() {
     const savedTime = now.toLocaleTimeString('en-GB', {
         hour: '2-digit', minute: '2-digit'
     });
-
-    const username = sessionStorage.getItem('username') || 'guest';
+	
+	const username = sessionStorage.getItem('username') || 'guest';
 
     const payload = JSON.stringify({
         name: configName || 'Untitled Draft',
@@ -39,7 +39,7 @@ function saveDraftOnExit() {
         pkgSubType: sessionStorage.getItem('pkgSubType'),
         savedOn,
         savedTime,
-        username,
+		username,
         selectedSvcs_s2: sessionStorage.getItem('selectedSvcs_s2'),
         selectedSvcs_s3: sessionStorage.getItem('selectedSvcs_s3'),
         selectedSvcs_s4: sessionStorage.getItem('selectedSvcs_s4'),
@@ -81,7 +81,7 @@ function closeDrafts() {
     });
 }
 
-document.addEventListener('click', function (e) {
+document.addEventListener('click', function(e) {
     if (e.target.id === 'draftOverlay') {
         closeDrafts();
     }
@@ -131,6 +131,7 @@ function loadDrafts(targetId = 'comp-list') {
 }
 
 function loadDraft(index) {
+
     const draft = window.ALL_DRAFTS[index];
 
     sessionStorage.setItem('state', JSON.stringify(draft.state || {}));
@@ -138,16 +139,16 @@ function loadDraft(index) {
     sessionStorage.setItem('pkgType', draft.pkgType || '');
     sessionStorage.setItem('pkgSubType', draft.pkgSubType || '');
 
-    // ← restore actual saved svc selections so pills + sidebar reload correctly
     sessionStorage.setItem('selectedSvcs_s2', draft.selectedSvcs_s2 || '[]');
     sessionStorage.setItem('selectedSvcs_s3', draft.selectedSvcs_s3 || '[]');
     sessionStorage.setItem('selectedSvcs_s4', draft.selectedSvcs_s4 || '[]');
+
     sessionStorage.setItem('loadedFromDraft', 'true');
 
     window.isInternalNavigation = true;
+
     window.location.href = '/builder/step1';
 }
-
 async function deleteDraft(index, e) {
     e.stopPropagation();
     const draft = window.ALL_DRAFTS[index];
@@ -251,7 +252,7 @@ function manualSaveDraft() {
         .then(() => {
             alert('Draft saved — ' + configName);
         })
-
+ 
         .catch(() => {
             alert('Failed to save draft — ' + configName);
         });
@@ -459,7 +460,7 @@ function initLibrarySearch() {
         content.parentNode.insertBefore(searchWrapper, content);
     }
 
-    document.getElementById('librarySearchInput').addEventListener('input', function () {
+    document.getElementById('librarySearchInput').addEventListener('input', function() {
         filterLibraryItems(this.value.trim());
         const clearBtn = document.getElementById('librarySearchClear');
         if (clearBtn) clearBtn.style.opacity = this.value ? '1' : '0';
@@ -669,7 +670,7 @@ function toggleUserMenu() {
     dropdown.classList.toggle("active");
 }
 
-document.addEventListener("click", function (e) {
+document.addEventListener("click", function(e) {
     const menu = document.querySelector(".user-menu");
     if (menu && !menu.contains(e.target)) {
         const dd = document.getElementById("userDropdown");
@@ -693,9 +694,8 @@ async function saveConfiguration() {
 
     const isUpdate = sessionStorage.getItem("isUpdate") === "true";
 
-
     if (!state?.s2?.length) {
-        alert('Service Plan selection in Step 2 is required');
+       alert('Service Plan selection in Step 2 is required');
         return;
     }
 
@@ -831,6 +831,7 @@ async function saveConfiguration() {
             alert(result.error || "Validation failed");
             return;
         }
+
         alert(result.message);
 
         if (sessionStorage.getItem('loadedFromDraft') === 'true') {
@@ -848,8 +849,7 @@ async function saveConfiguration() {
 
         window.isInternalNavigation = true;
 
-        window.location.href =
-            "/builder/step1";
+        window.location.href = "/builder/step1";
     } catch (error) {
         console.error(error);
         alert("Server error — please try again");
@@ -865,7 +865,7 @@ function clearBuilderSession() {
     sessionStorage.removeItem('pkgType');
     sessionStorage.removeItem('pkgSubType');
     sessionStorage.removeItem("isUpdate");
-    sessionStorage.removeItem('loadedFromDraft');
+	sessionStorage.removeItem('loadedFromDraft');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1050,7 +1050,7 @@ function approvePackage(tpName, btn) {
 
             console.log("APPROVED", data);
 
-            alert(tpName + ' approved, ' + "Tariff Package Created with ID : "
+           alert(tpName + ' approved, ' + "Tariff Package Created with ID : "
                 + data.tariffPackageId);
 
             window.location.href = '/builder/admin';
@@ -1086,7 +1086,7 @@ function rejectPackage(tpName, btn) {
 
             console.log("REJECTED", data);
 
-            alert(tpName + ' rejected');
+           alert(tpName + ' rejected');
 
             window.location.href = '/builder/admin';
 
@@ -1193,6 +1193,7 @@ function loadSavedPackage(index) {
     const d =
         config.data;
 
+
     /*
        convert saved format → builder state
     */
@@ -1234,7 +1235,7 @@ function loadSavedPackage(index) {
 
         publicityCode: d.publicityId,
 
-        endDate: (function () {
+        endDate: (function() {
 
             if (!d.endDate) return "";
 
@@ -1248,6 +1249,7 @@ function loadSavedPackage(index) {
 
         isCorporate: d.isCorporateYn
     };
+
 
     /*
        SAME keys as draft loader
@@ -1314,7 +1316,7 @@ function deleteSaved(tpName, e) {
             loadSaved(); // reload list
         })
         .catch(() => {
-            alert("Delete failed");
+            alert("Delete failed ");
         });
 }
 
@@ -1331,7 +1333,7 @@ function closeSaved() {
     });
 }
 
-document.addEventListener('click', function (e) {
+document.addEventListener('click', function(e) {
     if (e.target.id === 'savedOverlay') {
         closeSaved();
     }
@@ -1357,30 +1359,13 @@ function goNext() {
     window.location.href = `/builder/step${step + 1}`;
 }
 
-(function initClock() {
-    const clockEl = document.getElementById('navClock');
-    if (!clockEl) return;
-
-    function tick() {
-        clockEl.textContent = new Date().toLocaleString('en-GB', {
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit', second: '2-digit',
-        });
-    }
-
-    tick();
-    setInterval(tick, 1000);
-})();
-
 // ═══════════════════════════════════════════════════════
 //  PLAN HOVER TOOLTIP
 // ═══════════════════════════════════════════════════════
 
 (function initPlanHoverTooltip() {
 
-    // Disable tooltip on step2
-    if (window.location.pathname.includes('/builder/step2')) return;
-
+	if (window.location.pathname.includes('/builder/step2')) return;
     // ── Create a single shared tooltip element ──
     const tooltip = document.createElement('div');
     tooltip.id = 'planHoverTooltip';
@@ -1437,7 +1422,7 @@ function goNext() {
     }
 
     // ── Delegate hover on #comp-list plan cards ──
-    document.addEventListener('mouseover', function (e) {
+    document.addEventListener('mouseover', function(e) {
         const card = e.target.closest('[data-network-id][data-package-id], [data-networkid][data-packageid]');
         if (!card) return;
 
@@ -1483,25 +1468,40 @@ function goNext() {
     });
 
     // ── Follow mouse while inside the card ──
-    document.addEventListener('mousemove', function (e) {
+    document.addEventListener('mousemove', function(e) {
         if (tooltip.style.opacity === '1') {
             positionTooltip(e.clientX, e.clientY);
         }
     });
 
     // ── Hide when leaving the card ──
-    document.addEventListener('mouseout', function (e) {
+    document.addEventListener('mouseout', function(e) {
         const card = e.target.closest('[data-network-id][data-package-id], [data-networkid][data-packageid]');
         if (!card) return;
         if (!card.contains(e.relatedTarget)) {
             hideTooltip();
         }
     });
-
-    document.addEventListener('mouseover', function (e) {
-        if (!e.target.closest('[data-network-id][data-package-id], [data-networkid][data-packageid]')) {
-            hideTooltip();
-        }
-    });
+	document.addEventListener('mouseover', function (e) {
+	        if (!e.target.closest('[data-network-id][data-package-id], [data-networkid][data-packageid]')) {
+	            hideTooltip();
+	        }
+	    });
 
 })();
+
+(function initClock() {
+    const clockEl = document.getElementById('navClock');
+    if (!clockEl) return;
+
+    function tick() {
+        clockEl.textContent = new Date().toLocaleString('en-GB', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+        });
+    }
+
+    tick();
+    setInterval(tick, 1000);
+})();
+

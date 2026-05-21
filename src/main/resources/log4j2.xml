@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN" monitorInterval="30">
     <Properties>
-        <Property name="LOG_PATTERN">[%d{yyyy-MM-dd'T'HH:mm:ss.SSS}{GMT-3}] [TarrifBuilder] [%-5p]  [%c.%M] %m%n</Property>
+        <Property name="LOG_PATTERN">[%d{yyyy-MM-dd'T'HH:mm:ss.SSS}{IST}] [TarrifBuilder] [%-5p]  [%c.%M] %m%n</Property>
         <Property name="APP_LOG_ROOT">./log/</Property>
     </Properties>
     <Appenders>
         <Console name="Console"  ignoreExceptions="true">
             <PatternLayout pattern="${LOG_PATTERN}" />
-        </Console>
- 
-<!-- Rolling file appender with ignoreExceptions enabled -->
+        </Console> 
+
+ <!-- Rolling file appender with ignoreExceptions enabled -->
         <RollingFile name="appLog"
             fileName="${APP_LOG_ROOT}/TarrifBuilder.log"
             filePattern="${APP_LOG_ROOT}/TarrifBuilder-%d{yyyy-MM-dd'T'HH-mm-ss}-%i.log" ignoreExceptions="true">

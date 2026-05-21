@@ -1,3 +1,6 @@
+
+
+
 function clearForm() {
 
     // clear all input fields
@@ -12,6 +15,7 @@ function clearForm() {
     }
 }
 
+/* 🔥 runs after page load */
 function clearOnLoad() {
 
     const error = document.querySelector(".error-message");
@@ -26,8 +30,12 @@ function clearOnLoad() {
     }
 }
 
+
+
+/* 🔥 handles refresh/back cache (VERY IMPORTANT) */
 window.addEventListener("pageshow", function (event) {
 
+    // 🔥 only clear on refresh / back navigation
     if (event.persisted || performance.getEntriesByType("navigation")[0].type === "reload") {
 
         document.querySelectorAll("input[type='text'], input[type='password']")
@@ -44,3 +52,4 @@ window.addEventListener("pageshow", function (event) {
 window.onload = function () {
     sessionStorage.clear();
 }
+

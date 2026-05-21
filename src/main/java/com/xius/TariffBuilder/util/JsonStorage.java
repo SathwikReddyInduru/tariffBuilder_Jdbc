@@ -26,9 +26,7 @@ public class JsonStorage {
 	 */
 	public boolean exists(String tpName) {
 
-		logger.debug(
-				"Checking JSON existence for tpName={}",
-				tpName);
+		logger.debug("Checking JSON existence for tpName={}", tpName);
 
 		try {
 
@@ -51,9 +49,7 @@ public class JsonStorage {
 
 		catch (Exception e) {
 
-			logger.error(
-					"exists error",
-					e);
+			logger.error("exists error", e);
 
 			return false;
 		}
@@ -167,9 +163,7 @@ public class JsonStorage {
 
 		catch (Exception e) {
 
-			logger.error(
-					"getAllTpNames error",
-					e);
+			logger.error("getAllTpNames error", e);
 
 			return Set.of();
 		}
@@ -180,9 +174,7 @@ public class JsonStorage {
 	 */
 	public Object getTpData(String tpName) {
 
-		logger.info(
-				"Fetching JSON for {}",
-				tpName);
+		logger.info("Fetching JSON for {}", tpName);
 
 		try {
 
@@ -205,9 +197,7 @@ public class JsonStorage {
 
 		catch (Exception e) {
 
-			logger.error(
-					"getTpData error",
-					e);
+			logger.error("getTpData error", e);
 
 			return null;
 		}
@@ -237,9 +227,7 @@ public class JsonStorage {
 
 		catch (Exception e) {
 
-			logger.error(
-					"readAll error",
-					e);
+			logger.error("readAll error", e);
 
 			return new LinkedHashMap<>();
 		}
@@ -256,21 +244,14 @@ public class JsonStorage {
 
 			File file = new File(FILE_PATH);
 
-			mapper
-					.writerWithDefaultPrettyPrinter()
-					.writeValue(
-							file,
-							json);
+			mapper.writerWithDefaultPrettyPrinter().writeValue(file, json);
 
-			logger.info(
-					"json updated");
+			logger.info("json updated");
 		}
 
 		catch (Exception e) {
 
-			logger.error(
-					"writeAll error",
-					e);
+			logger.error("writeAll error", e);
 		}
 	}
 
@@ -289,17 +270,13 @@ public class JsonStorage {
 
 			writeAll(json);
 
-			logger.info(
-					"json removed {}",
-					tpName);
+			logger.info("json removed {}", tpName);
 
 		}
 
 		catch (Exception e) {
 
-			logger.error(
-					"remove error",
-					e);
+			logger.error("remove error", e);
 		}
 	}
 
@@ -328,12 +305,9 @@ public class JsonStorage {
 
 				Object storedUser = tp.get("username");
 
-				if (storedUser != null
-						&& storedUser.toString().equals(username)) {
+				if (storedUser != null && storedUser.toString().equals(username)) {
 
-					result.put(
-							entry.getKey(),
-							tp);
+					result.put(entry.getKey(), tp);
 				}
 			}
 		}

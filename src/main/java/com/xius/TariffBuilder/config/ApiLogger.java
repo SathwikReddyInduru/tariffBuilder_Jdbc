@@ -20,83 +20,83 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 @Component
 public class ApiLogger extends OncePerRequestFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(ApiLogger.class);
+	private static final Logger log = LoggerFactory.getLogger(ApiLogger.class);
 
-    /* ignore UI resources */
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
+	/* ignore UI resources */
+	@Override
+	protected boolean shouldNotFilter(HttpServletRequest request) {
 
-        String uri = request.getRequestURI();
+		String uri = request.getRequestURI();
 
-        return uri.contains(".css") || uri.contains(".js") || uri.contains(".png") || uri.contains(".jpg")
-                || uri.contains(".jpeg") || uri.contains(".gif") || uri.contains(".ico") || uri.contains("/images/")
-                || uri.contains("/css/") || uri.contains("/js/") || uri.contains("/builder")
-                || uri.contains("/loginform");
-    }
+		return uri.contains(".css") || uri.contains(".js") || uri.contains(".png") || uri.contains(".jpg")
+				|| uri.contains(".jpeg") || uri.contains(".gif") || uri.contains(".ico") || uri.contains("/images/")
+				|| uri.contains("/css/") || uri.contains("/js/") || uri.contains("/builder")
+				|| uri.contains("/loginform");
+	}
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
 
-        String traceId = UUID.randomUUID().toString();
+		String traceId = UUID.randomUUID().toString();
 
-        MDC.put("traceId", traceId);
+		MDC.put("traceId", traceId);
 
-        long startTime = System.currentTimeMillis();
+		long startTime = System.currentTimeMillis();
 
-        ContentCachingRequestWrapper req = new ContentCachingRequestWrapper(request, 1024 * 1024);
+		ContentCachingRequestWrapper req = new ContentCachingRequestWrapper(request, 1024 * 1024);
 
-        ContentCachingResponseWrapper res = new ContentCachingResponseWrapper(response);
+		ContentCachingResponseWrapper res = new ContentCachingResponseWrapper(response);
 
-        try {
+		try {
 
-            log.info("------------ handleRequest ------------");
+			log.info("------------ handleRequest ------------");
 
-            log.info(req.getMethod());
+			log.info(req.getMethod());
 
-            log.info(req.getRequestURI());
+			log.info(req.getRequestURI());
 
-            log.info(request.getRemoteAddr());
+			log.info(request.getRemoteAddr());
 
-            filterChain.doFilter(req, res);
+			filterChain.doFilter(req, res);
 
-        } finally {
+		} finally {
 
-            long duration = System.currentTimeMillis() - startTime;
+			long duration = System.currentTimeMillis() - startTime;
 
-            String requestBody = new String(req.getContentAsByteArray(), StandardCharsets.UTF_8);
+			String requestBody = new String(req.getContentAsByteArray(), StandardCharsets.UTF_8);
 
-            String responseBody = new String(res.getContentAsByteArray(), StandardCharsets.UTF_8);
+			String responseBody = new String(res.getContentAsByteArray(), StandardCharsets.UTF_8);
 
-            if (!requestBody.isBlank()) {
+			if (!requestBody.isBlank()) {
 
-                log.info("Request Payload {}", requestBody);
-            }
+				log.info("Request Payload {}", requestBody);
+			}
 
-            log.info(String.valueOf(res.getStatus()));
+			log.info(String.valueOf(res.getStatus()));
 
-            String contentType = res.getContentType();
+			String contentType = res.getContentType();
 
-            if (!responseBody.isBlank()) {
+			if (!responseBody.isBlank()) {
 
-                if (contentType != null && contentType.contains("application/json")) {
-                    log.info("Response Payload {}", responseBody);
+			    if (contentType != null && contentType.contains("application/json")) {
+			        log.info("Response Payload {}", responseBody);
 
-                } else if (contentType != null && contentType.contains("text/html")) {
-                    log.info("HTML response returned (status={})", res.getStatus());
+			    } else if (contentType != null && contentType.contains("text/html")) {
+			        log.info("HTML response returned (status={})", res.getStatus());
 
-                } else {
-                    log.info("Response Status {}", res.getStatus());
-                }
-            }
+			    } else {
+			        log.info("Response Status {}", res.getStatus());
+			    }
+			}
 
-            log.info("Execution time {} ms", duration);
+			log.info("Execution time {} ms", duration);
 
-            log.info("------------ handleResponse ------------");
+			log.info("------------ handleResponse ------------");
 
-            res.copyBodyToResponse();
+			res.copyBodyToResponse();
 
-            MDC.clear();
-        }
-    }
+			MDC.clear();
+		}
+	}
 }

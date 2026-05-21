@@ -124,19 +124,23 @@ function refreshSidebar() {
             }
 
             if (!data || !data.length) {
+
                 list.innerHTML = '<p class="sidebar-text">No Plans</p>';
                 return;
             }
 
             list.innerHTML = data.map(plan => `
-                <div class="draggable-item"
-                    data-network-id="${plan.networkId}"
-                    data-package-id="${plan.servicePackageId}"
-                    onclick="addToCenter('${plan.servicePackageId}','${plan.servicePackageName}','${plan.networkId}')">
-                    ${plan.servicePackageName}
-                </div>
-            `).join('');
+				 
+				                <div class="draggable-item"
 
+				                    data-network-id="${plan.networkId}"
+				                    data-package-id="${plan.servicePackageId}"
+				                    onclick="addToCenter('${plan.servicePackageId}','${plan.servicePackageName}','${plan.networkId}')">
+				                    ${plan.servicePackageName}
+									
+								</div>
+
+				            `).join('');
         })
         .catch(err => {
             console.error("Fetch error:", err);
@@ -190,12 +194,12 @@ function renderCard(item) {
     card.id = `card-s3-${item.id}`;
 
     card.innerHTML = `
-
+ 
         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
             <b>${item.name}</b>
             <span onclick="removeItem('${item.id}')" style="color:red; cursor:pointer;">✕</span>
         </div>
-
+ 
         <div class="card-grid">
             <div class="card-field">
                 <label>VALIDITY</label>
@@ -204,7 +208,7 @@ function renderCard(item) {
                     <option ${item.validity === 'Weekly' ? 'selected' : ''}>Weekly</option>
                 </select>
             </div>
-
+ 
             <div class="card-field">
                 <label>MIDNIGHT EXPIRY</label>
                 <select onchange="updateField('${item.id}', 'midnightExpiry', this.value)">
@@ -212,7 +216,7 @@ function renderCard(item) {
                     <option ${item.midnightExpiry === 'Yes' ? 'selected' : ''}>Yes</option>
                 </select>
             </div>
-
+ 
             <div class="card-field">
                 <label>AUTO RENEWAL</label>
                 <select onchange="handleRenewalChange('${item.id}', this.value)">
@@ -220,7 +224,7 @@ function renderCard(item) {
                     <option ${item.renewal === 'Yes' ? 'selected' : ''}>Yes</option>
                 </select>
             </div>
-
+ 
             <div id="renewal-${item.id}" style="display:${item.renewal === 'Yes' ? 'contents' : 'none'};">
                 <div class="card-field">
                     <label>RENTAL</label>
@@ -228,14 +232,14 @@ function renderCard(item) {
                         value="${item.rental || ''}"
                         oninput="updateField('${item.id}', 'rental', this.value)">
                 </div>
-
+ 
                 <div class="card-field">
                     <label>MAX COUNT</label>
                     <input type="number"
                         value="${item.maxCount || ''}"
                         oninput="updateField('${item.id}', 'maxCount', this.value)">
                 </div>
-
+ 
                 <div class="card-field">
                     <label>FREE CYCLES</label>
                     <input type="number"

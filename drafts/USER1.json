@@ -1,16 +1,166 @@
 [ {
   "name" : "Untitled Draft",
-  "pkgType" : "POSTPAID",
-  "pkgSubType" : "COMMERCIAL",
-  "savedOn" : "24 Apr 2026",
-  "savedTime" : "16:58",
+  "pkgType" : "PREPAID",
+  "pkgSubType" : null,
+  "savedOn" : "11 May 2026",
+  "savedTime" : "15:14",
   "username" : "USER1",
-  "selectedSvcs_s2" : "[]",
+  "selectedSvcs_s2" : null,
   "selectedSvcs_s3" : null,
   "selectedSvcs_s4" : null,
+  "state" : { }
+}, {
+  "name" : "Test_today",
+  "pkgType" : "PREPAID",
+  "pkgSubType" : "COMMERCIAL",
+  "savedOn" : "07 May 2026",
+  "savedTime" : "14:27",
+  "username" : "USER1",
+  "selectedSvcs_s2" : "[\"VOICE\"]",
+  "selectedSvcs_s3" : "[\"VOICE\"]",
+  "selectedSvcs_s4" : "[]",
   "state" : {
-    "s2" : [ ],
+    "s2" : [ {
+      "id" : 1743,
+      "name" : "MI MUNDO S_V"
+    } ],
     "s3" : [ ],
+    "s4" : [ ],
+    "price" : "0",
+    "publicityCode" : "testD",
+    "endDate" : "2027-04-04",
+    "isCorporate" : false
+  }
+}, {
+  "name" : "tp_test",
+  "pkgType" : "PREPAID",
+  "pkgSubType" : "COMMERCIAL",
+  "savedOn" : "27 Apr 2026",
+  "savedTime" : "10:58",
+  "username" : "USER1",
+  "selectedSvcs_s2" : "[\"SMS\",\"DATA\",\"VOICE\"]",
+  "selectedSvcs_s3" : "[\"VOICE\"]",
+  "selectedSvcs_s4" : "[\"VOICE\",\"SMS\",\"DATA\"]",
+  "state" : {
+    "s2" : [ {
+      "id" : "2069",
+      "name" : "\tMI MUNDO_SD2",
+      "networkId" : "16"
+    } ],
+    "s3" : [ {
+      "id" : 1750,
+      "name" : "MI MUNDO M_VO",
+      "validity" : "Monthly",
+      "midnightExpiry" : "No",
+      "renewal" : "No",
+      "rental" : 0,
+      "maxCount" : 0,
+      "freeCycles" : "0"
+    }, {
+      "id" : "1973",
+      "name" : "xius_atp",
+      "validity" : "Monthly",
+      "renewal" : "No",
+      "midnightExpiry" : "No",
+      "rental" : "",
+      "maxCount" : "",
+      "freeCycles" : "0"
+    }, {
+      "id" : "1750",
+      "name" : "MI MUNDO M_VO",
+      "validity" : "Monthly",
+      "renewal" : "No",
+      "midnightExpiry" : "No",
+      "rental" : "",
+      "maxCount" : "",
+      "freeCycles" : "0"
+    }, {
+      "id" : "1985",
+      "name" : "xius_tpt",
+      "validity" : "Monthly",
+      "renewal" : "No",
+      "midnightExpiry" : "No",
+      "rental" : "",
+      "maxCount" : "",
+      "freeCycles" : "0"
+    }, {
+      "id" : "1758",
+      "name" : "MI MUNDO L_Vo",
+      "validity" : "Monthly",
+      "renewal" : "No",
+      "midnightExpiry" : "No",
+      "rental" : "",
+      "maxCount" : "",
+      "freeCycles" : "0"
+    }, {
+      "id" : "1925",
+      "name" : "test_builder",
+      "validity" : "Monthly",
+      "renewal" : "No",
+      "midnightExpiry" : "No",
+      "rental" : "",
+      "maxCount" : "",
+      "freeCycles" : "0"
+    } ],
+    "s4" : [ {
+      "id" : 1765,
+      "name" : "DYNAMIC_DATP",
+      "validity" : "Monthly",
+      "midnightExpiry" : "No",
+      "renewal" : "No",
+      "rental" : 0,
+      "maxCount" : 0,
+      "freeCycles" : "0"
+    }, {
+      "id" : "2001",
+      "name" : "MI MUNDO_VSD1",
+      "validity" : "Monthly",
+      "renewal" : "No",
+      "midnightExpiry" : "No",
+      "rental" : "",
+      "maxCount" : "",
+      "freeCycles" : "0"
+    } ],
+    "price" : "4",
+    "publicityCode" : "tester",
+    "endDate" : "2026-04-21",
+    "isCorporate" : true
+  }
+}, {
+  "name" : "MI",
+  "pkgType" : "PREPAID",
+  "pkgSubType" : "NORMAL",
+  "savedOn" : "23 Apr 2026",
+  "savedTime" : "16:14",
+  "username" : "USER1",
+  "selectedSvcs_s2" : "[\"VOICE\"]",
+  "selectedSvcs_s3" : "[\"VOICE\"]",
+  "selectedSvcs_s4" : null,
+  "state" : {
+    "s2" : [ {
+      "id" : "1743",
+      "name" : "MI MUNDO S_V",
+      "networkId" : "16"
+    } ],
+    "s3" : [ {
+      "id" : "2173",
+      "name" : "MI MUNDO M_VO_TP_939",
+      "validity" : "Monthly",
+      "renewal" : "No",
+      "midnightExpiry" : "No",
+      "rental" : "",
+      "maxCount" : "",
+      "freeCycles" : "0"
+    }, {
+      "id" : "1985",
+      "name" : "xius_tpt",
+      "validity" : "Monthly",
+      "renewal" : "No",
+      "midnightExpiry" : "No",
+      "rental" : "",
+      "maxCount" : "",
+      "freeCycles" : "0"
+    } ],
     "s4" : [ ],
     "price" : "",
     "publicityCode" : "",
