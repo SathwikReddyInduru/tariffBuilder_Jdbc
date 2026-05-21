@@ -1,4 +1,49 @@
 {
+  "Test_today" : {
+    "tpName" : "Test_today",
+    "username" : "USER1",
+    "networkId" : 16,
+    "data" : {
+      "username" : "USER1",
+      "isUpdate" : true,
+      "submittedOn" : "21 May 2026",
+      "packageType" : "PREPAID",
+      "tariffPackCategory" : "COMMERCIAL",
+      "tariffPackageDesc" : "Test_today",
+      "charge" : "599",
+      "endDate" : "04/04/2027",
+      "publicityId" : "testD",
+      "chargeId" : "Test_today_PR",
+      "isCorporateYn" : false,
+      "tariffPlanId" : 1743,
+      "tariffPlanName" : "MI MUNDO S_V",
+      "selectedSvcs_s2" : "[\"VOICE\"]",
+      "selectedSvcs_s3" : "[\"VOICE\"]",
+      "selectedSvcs_s4" : "[\"VOICE\"]",
+      "defaultAtps" : [ {
+        "servicePackageId" : 1758,
+        "chargeId" : "Test_today_PR",
+        "packageName" : "MI MUNDO L_Vo",
+        "validity" : "Monthly",
+        "midnightExpiry" : "Yes",
+        "renewal" : "Yes",
+        "rental" : "0",
+        "maxCount" : "0",
+        "freeCycles" : "0"
+      } ],
+      "allowedAtps" : [ {
+        "servicePackageId" : 1750,
+        "chargeId" : "Test_today_PR",
+        "packageName" : "MI MUNDO M_VO",
+        "validity" : "Monthly",
+        "midnightExpiry" : "No",
+        "renewal" : "Yes",
+        "rental" : "0",
+        "maxCount" : "0",
+        "freeCycles" : "0"
+      } ]
+    }
+  },
   "TP_T1" : {
     "tpName" : "TP_T1",
     "username" : "USER2",
@@ -31,31 +76,6 @@
         "maxCount" : 0,
         "freeCycles" : "0"
       } ],
-      "allowedAtps" : [ ]
-    }
-  },
-  "Test_today" : {
-    "tpName" : "Test_today",
-    "username" : "USER1",
-    "networkId" : 16,
-    "data" : {
-      "username" : "USER1",
-      "isUpdate" : true,
-      "submittedOn" : "20 May 2026",
-      "packageType" : "PREPAID",
-      "tariffPackCategory" : "COMMERCIAL",
-      "tariffPackageDesc" : "Test_today",
-      "charge" : "0",
-      "endDate" : "04/04/2027",
-      "publicityId" : "testD",
-      "chargeId" : "Test_today_PR",
-      "isCorporateYn" : false,
-      "tariffPlanId" : 1743,
-      "tariffPlanName" : "MI MUNDO S_V",
-      "selectedSvcs_s2" : "[\"VOICE\"]",
-      "selectedSvcs_s3" : "[]",
-      "selectedSvcs_s4" : "[]",
-      "defaultAtps" : [ ],
       "allowedAtps" : [ ]
     }
   },

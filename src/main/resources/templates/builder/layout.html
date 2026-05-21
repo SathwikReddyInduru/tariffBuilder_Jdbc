@@ -12,7 +12,7 @@
 
 <body>
 
-  <nav class="navbar">
+    <nav class="navbar">
         <img th:src="@{/images/logo.png}" alt="Xius Logo" style="height:50px; vertical-align:middle;">
         <div class="navbar-right">
             <div id="navClock" class="nav-clock"></div>
@@ -38,7 +38,6 @@
              Visibility driven by privilege id (set via JS later)
         ════════════════════════════════════════════════════════════ -->
         <nav class="main-rail" id="mainRail">
-
             <!-- Builder node -->
             <a href="/builder/step1" class="main-node" id="mn-builder" title="Tariff Builder"
                 onclick="return activateModule('builder', this)">
@@ -58,6 +57,12 @@
             <div style="margin-top:auto;"></div>
 
             <a href="#" class="main-node" id="mn-saved" title="Drafts" th:classappend="${activeStep == 0} ? ' hidden'"
+                onclick="openClone(); return false;">
+                <span class="main-node-icon material-icons">copy_all</span>
+                <span class="main-node-label">CLONE TP's</span>
+            </a>
+
+            <a href="#" class="main-node" id="mn-saved" title="Drafts" th:classappend="${activeStep == 0} ? ' hidden'"
                 onclick="openSaved(); return false;">
                 <span class="main-node-icon material-icons">folder</span>
                 <span class="main-node-label">CREATED TP's</span>
@@ -68,7 +73,6 @@
                 <span class="main-node-icon material-icons">drafts</span>
                 <span class="main-node-label">DRAFTS</span>
             </a>
-
         </nav>
 
         <!-- ═══════════════════════════════════════════════════════════
@@ -98,16 +102,15 @@
         </nav>
 
         <main class="workspace" th:classappend="${activeStep == 0} ? ' admin-mode'">
-
             <!-- FLOATING PILL HEADER -->
             <header class="header-pill-bar">
                 <div class="logo">
-                   <span th:text="${username != null ? username : 'user'}">user</span>
+                    <span th:text="${username != null ? username : 'user'}">user</span>
                 </div>
                 <div class="header-pill-controls" th:classappend="${activeStep == 0} ? ' hidden'">
                     <input type="text" placeholder="Name..." class="config-name" id="configName">
-                    <span class="material-icons reset-btn" id="resetBtn" onclick="resetBuilder()"
-                        title="Reset builder" th:classappend="${activeStep == 0} ? ' hidden'">
+                    <span class="material-icons reset-btn" id="resetBtn" onclick="resetBuilder()" title="Reset builder"
+                        th:classappend="${activeStep == 0} ? ' hidden'">
                         restart_alt
                     </span>
                     <span class="material-icons save-draft-btn" id="saveDraftBtn" onclick="manualSaveDraft()"
@@ -119,7 +122,6 @@
 
             <!-- TWO-PANE BODY: left card + right card -->
             <div class="workspace-body">
-
                 <!-- LEFT PANE — stage content -->
                 <div class="pane pane-left" id="leftPane">
                     <th:block th:replace="${stageFrag}"></th:block>
@@ -137,9 +139,43 @@
                     </div>
                     <div class="sidebar-content" id="comp-list"></div>
                 </aside>
-
             </div>
 
+            <!-- ═══════════════════════════════════════════════════════════
+            CLONE TPS PAGE — injected inside .workspace (as sibling to .workspace-body)
+            Add this block INSIDE the <main class="workspace"> element,
+            RIGHT BEFORE the closing </main> tag in layout.html.
+            ════════════════════════════════════════════════════════════ -->
+
+            <!-- Clone TPs inline page (hidden by default) -->
+            <div id="clonePage">
+
+                <!-- Header pill bar — with search bar -->
+                <div class="clone-page-header">
+                    <div class="clone-page-header-left">
+                        <span class="material-icons">copy_all</span>
+                        <span class="clone-page-header-title">Clone a Tariff Plan</span>
+                        <span class="clone-page-header-badge" id="clonePlanCount">0 plans</span>
+                    </div>
+                    <div class="clone-search-wrap">
+                        <span class="material-icons clone-search-icon">search</span>
+                        <input type="text" id="cloneSearchInput" class="clone-search-input"
+                            placeholder="Search by price, name or category…" oninput="_applyTpSearch(this.value)" />
+                    </div>
+                    <button class="clone-page-close-btn" onclick="closeClonePage()">
+                        <span class="material-icons">arrow_back</span>
+                        Back
+                    </button>
+                </div>
+
+                <!-- Scrollable cards body -->
+                <div class="clone-page-body">
+                    <div class="clone-plan-grid" id="clonePlanGrid">
+                        <!-- Cards injected by _renderTpCards() -->
+                    </div>
+                </div>
+
+            </div>
         </main>
     </div>
 
@@ -171,13 +207,13 @@
         const PRIVILEGES = /*[[${privileges}]]*/[];
         const USERNAME = /*[[${username}]]*/ 'User';
         const SESSION_ID = /*[[${sessionId}]]*/ '';
+        const NETWORK_ID = /*[[${networkId}]]*/ null;
     </script>
     <script th:src="@{/js/layout.js}"></script>
 
     <!-- DRAFT OVERLAY -->
     <div id="draftOverlay" class="draft-overlay">
         <div class="draft-panel" id="draftPanel">
-
             <div class="draft-header">
                 <span>Drafts</span>
                 <span class="material-icons close-btn" onclick="closeDrafts()">close</span>
@@ -186,24 +222,26 @@
             <div class="draft-content" id="draftOverlayList">
                 <!-- drafts will render here -->
             </div>
-
         </div>
     </div>
 
     <div id="savedOverlay" class="draft-overlay">
-
         <div class="draft-panel">
-
             <div class="draft-header">
-
                 <span>Saved Configs</span> <span class="material-icons close-btn" onclick="closeSaved()"> close </span>
-
             </div>
-
             <div class="draft-content" id="savedOverlayList"></div>
-
         </div>
+    </div>
 
+    <div id="tpDetailsModal" class="tp-modal-overlay">
+        <div class="tp-modal">
+            <button class="tp-modal-close" onclick="closeTpDetails()">
+                ✕
+            </button>
+
+            <div id="tpModalContent"></div>
+        </div>
     </div>
 
 </body>
