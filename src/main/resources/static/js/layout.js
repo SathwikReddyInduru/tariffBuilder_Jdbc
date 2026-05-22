@@ -2,6 +2,8 @@ window.addEventListener("pageshow", () => {
     window.isInternalNavigation = false;
 });
 
+let _currentClonePayload = null;
+
 window.isInternalNavigation = false;
 
 if (USERNAME) {
@@ -262,9 +264,11 @@ function applyPrivilege() {
 
     const builderNode = document.getElementById('mn-builder');
     const approverNode = document.getElementById('mn-approver');
+    const cloneNode = document.getElementById('mn-clone');
 
     const hasBuilder = PRIVILEGE_IDS.includes("P26125");
     const hasApprover = PRIVILEGE_IDS.includes("P26126");
+    const hasClone = PRIVILEGE_IDS.includes("P26127");
 
     // Hide nodes individually
     if (!hasBuilder && builderNode) {
@@ -274,6 +278,10 @@ function applyPrivilege() {
     if (!hasApprover && approverNode) {
         approverNode.style.display = "none";
     }
+
+    // if (!hasClone && cloneNode) {
+    //     cloneNode.style.display = "none";
+    // }
 }
 
 /*async function checkDraftsOnLogin() {
@@ -349,9 +357,11 @@ function activateModule(module, el) {
 
     const hasBuilder = PRIVILEGE_IDS.includes("P26125");
     const hasApprover = PRIVILEGE_IDS.includes("P26126");
+    const hasClone = PRIVILEGE_IDS.includes("P26127");
 
     if (module === 'builder' && !hasBuilder) return false;
     if (module === 'approver' && !hasApprover) return false;
+    if (module === 'clone' && !hasClone) return false;
 
     // RESTORE LIBRARY when switching back
     if (module === 'builder') {
@@ -1702,6 +1712,8 @@ function _tpfClearAll() {
     _tpFilter.price = null;
     document.querySelectorAll('.tpf-chip').forEach(c => c.classList.remove('selected'));
     _tpfUpdateFooter();
+    _applyTpSearch(document.getElementById('cloneSearchInput')?.value || '');
+    document.getElementById('tpFilterModal').classList.remove('active');
 }
 
 function _tpfApply() {
@@ -1818,15 +1830,76 @@ async function _loadAndRenderTpCards() {
     }
 }
 
-// ── OTT icon definitions ──────────────────────────────────
-const _OTT_ICONS = [
-    { label: 'N', bg: '#e50914', title: 'Netflix' },
-    { label: 'HS', bg: '#1f80e0', title: 'Hotstar' },
-    { label: 'fb', bg: '#1877f2', title: 'Facebook' },
-    { label: 'Z5', bg: '#8b1fa9', title: 'Zee5' },
-    { label: 'SL', bg: '#003087', title: 'Sony LIV' },
-    { label: '···', bg: '#64748b', title: 'More' },
+// ── OTT service master list (cards + modal share this) ────
+const _OTT_SERVICES = [
+    {
+        id: 'netflix',
+        title: 'Netflix',
+        src: '/images/ott/Netflix.avif',
+        // fallback: 'https://play-lh.googleusercontent.com/TBRwjS_qfJCSj1m7zZB93FnpJM5fSpMA_wUlFDLxWAb45T9RmwBvQd5cWR5viJJOhkI=s96',
+        bg: '#000000',
+        desc: 'Award-winning series | Movies | Documentaries',
+    },
+    {
+        id: 'prime',
+        title: 'Prime Video',
+        src: '/images/ott/Prime.svg',
+        fallback: 'https://play-lh.googleusercontent.com/7GeHvHSS4mPpgXgZbEcBnXPuqstCJSnXxN3HkJ1UXlW_cDiQ6wUnrMPP9UX3Lc5s-A=s96',
+        bg: '#00a8e1',
+        desc: 'Amazon Originals | Movies | Live Sports',
+    },
+    {
+        id: 'hotstar',
+        title: 'JioHotstar',
+        src: '/images/ott/Jiohotstar.svg',
+        fallback: 'https://play-lh.googleusercontent.com/N8wdJc9fXHWNFSHjFNBmMLBIsHTMVLvQWm0wAAOOVLvPz6jPE0O3hgGiHCBUaGnETQ=s96',
+        bg: '#1f80e0',
+        desc: 'TV Shows | Movies | Originals | Live Sports',
+    },
+    {
+        id: 'zee5',
+        title: 'ZEE5',
+        src: '/images/ott/Zee5.svg',
+        fallback: 'https://play-lh.googleusercontent.com/K2YZMc-arGqQrPjBT_BBORfTCNMvkVYi6hk1UHm7nzAE3-pjBYMBvZlRmFAZsXKlg7Y=s96',
+        bg: '#8b1fa9',
+        desc: 'Web Series | Movies | Originals in 18 languages',
+    },
+    {
+        id: 'sonyliv',
+        title: 'SonyLIV',
+        src: '/images/ott/SonyLiv.svg',
+        fallback: 'https://play-lh.googleusercontent.com/5kFbAj5LrFKKb42jDAfZ-rSR7nZ5kZSgd3xyRRn2OJUyFCxXU9V9pCvMWyGKWi2xSGM=s96',
+        bg: '#003087',
+        desc: 'Popular TV Shows | New Series | Movies',
+    },
+    {
+        id: 'mxplayer',
+        title: 'MX Player',
+        src: '/images/ott/MX_Player.webp',
+        fallback: 'https://play-lh.googleusercontent.com/qJ3jUspGE6OBkBEi1sWTBYggELSMCYLKZpLKB4FbHzQJJZBLWaZ0jL-nefcNfBzGXQ=s96',
+        bg: '#ff6c00',
+        desc: 'Free Movies | Web Series | Music Videos',
+    },
+    {
+        id: 'jiosaavn',
+        title: 'JioSaavn',
+        src: '/images/ott/JioSaavn.png',
+        fallback: 'https://play-lh.googleusercontent.com/YXF5WxFIGaE89K0K5C8fX2cV7RBBLxhI7HLlWv4rTVe1P0nIlTjy4eHT9iJqOKNitFoC=s96',
+        bg: '#1db954',
+        desc: 'Music | Podcasts | Radio | 80M+ Songs',
+    },
+    {
+        id: 'fancode',
+        title: 'FanCode',
+        src: '/images/ott/FanCode.svg',
+        fallback: 'https://play-lh.googleusercontent.com/8vFMcbQ9IuRPcJKz6lHt0W_FWu_pY4HUMqz-t7k-E1I4-GHUWbPXrVvjSSvF2EbIoQ=s96',
+        bg: '#e63946',
+        desc: 'Live Cricket | Football | Sports Streaming',
+    },
 ];
+
+// ── Icons shown in plan cards (first 5 + "+N more" badge) ─
+const _OTT_ICONS = _OTT_SERVICES;
 
 // ── All loaded plans (for search filtering) ───────────────
 let _allTpPlans = [];
@@ -1929,10 +2002,13 @@ function _applyTpSearch(query) {
         return;
     }
 
-    // OTT icons strip — always show all 6
-    const ottHtml = _OTT_ICONS.map(o =>
-        `<span class="tp-ott-icon" style="background:${o.bg}" title="${o.title}">${o.label}</span>`
-    ).join('');
+    // OTT icons strip — show first 5 + overflow badge
+    const _OTT_CARD_MAX = 5;
+    const visibleOtts = _OTT_ICONS.slice(0, _OTT_CARD_MAX);
+    const extraCount = _OTT_ICONS.length - _OTT_CARD_MAX;
+    const ottHtml = visibleOtts.map(o =>
+        `<img class="tp-ott-icon-img" src="${o.src}" alt="${o.title}" title="${o.title}" onerror="this.style.display='none'">`
+    ).join('') + (extraCount > 0 ? `<span class="tp-ott-more">+${extraCount}</span>` : '');
 
     groups.forEach((group, i) => {
         const planId = 'tp-grp-' + encodeURIComponent(group.tariffPackageDesc);
@@ -1953,7 +2029,6 @@ function _applyTpSearch(query) {
             const cat = b.balanceCategory || '';
             return `
                 <div class="tp-meta-col">
-                    <span class="tp-meta-icon">${icon}</span>
                     <span class="tp-meta-val">${val}</span>
                     <span class="tp-meta-key">${cat}</span>
                 </div>`;
@@ -1989,7 +2064,7 @@ function _applyTpSearch(query) {
 
                 <button
                     class="tp-btn-select"
-                    onclick="event.stopPropagation();openCloneTree('${encodeURIComponent(group.tariffPackageDesc)}', ${group._raw[0]?.tariffPackageId || 'null'})"
+                    onclick="event.stopPropagation();openCloneTree('${encodeURIComponent(group.tariffPackageDesc)}', ${group._raw[0]?.tariff_package_id || 'null'})"
                 >
                     Select
                 </button>
@@ -2033,6 +2108,8 @@ async function openCloneTree(encodedDesc, tariffPackageId) {
     modal.dataset.tpDesc = tpDesc;
     modal.dataset.tpId = tariffPackageId || '';
 
+    // Store full plan object so Clone button can POST it directly
+
     // Show modal with loading state
     body.innerHTML = `<div class="ctm-loading">
         <span class="material-icons ctm-spin">refresh</span>
@@ -2045,8 +2122,9 @@ async function openCloneTree(encodedDesc, tariffPackageId) {
         const networkId = (typeof NETWORK_ID !== 'undefined' && NETWORK_ID) ? NETWORK_ID : '';
         const res = await fetch(`/details?networkId=${networkId}&tariffPackageId=${tariffPackageId}`);
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        const rows = await res.json();
-        _renderCloneTree(body, tpDesc, rows);
+        const data = await res.json();
+        _currentClonePayload = data;
+        _renderCloneTree(body, tpDesc, data);
     } catch (err) {
         console.error('Clone tree fetch error:', err);
         body.innerHTML = `<div class="ctm-error">
@@ -2056,79 +2134,84 @@ async function openCloneTree(encodedDesc, tariffPackageId) {
     }
 }
 
-function _renderCloneTree(container, tpDesc, rows) {
-    // Separate by tariffPlanType
-    const tpRow = rows.find(r => r.tariffPlanType === 'TP');
-    const datpRows = rows.filter(r => r.tariffPlanType === 'DATP');
-    const aatpRows = rows.filter(r => r.tariffPlanType === 'AATP');
+function _renderCloneTree(container, tpDesc, response) {
+    // ── Unwrap: response is { tpName, username, networkId, data: {...} }
+    const d = response.data || response;
 
-    // Name fallbacks
-    const tpName = tpRow?.chargeDesc || tpRow?.chargeId || 'TP';
-    const datpName = r => r.chargeDesc || r.chargeId || 'DATP';
-    const aatpName = r => r.chargeDesc || r.chargeId || 'AATP';
+    const tpName = d.tariffPlanName || d.tariffPackageDesc || '—';
+    const datpRows = d.defaultAtps || [];
+    const aatpRows = d.allowedAtps || [];
 
-    // Build child rows for TP node
-    const childrenHtml = [
-        ...datpRows.map(r => `
-            <div class="ctm-child">
-                <div class="ctm-connector"></div>
-                <div class="ctm-node ctm-node--datp">
-                    <span class="ctm-node-icon material-icons">add_circle_outline</span>
-                    <div class="ctm-node-info">
-                        <span class="ctm-node-label">DATP</span>
-                        <span class="ctm-node-name">${datpName(r)}</span>
-                    </div>
-                </div>
-            </div>`),
-        ...aatpRows.map(r => `
-            <div class="ctm-child">
-                <div class="ctm-connector"></div>
-                <div class="ctm-node ctm-node--aatp">
-                    <span class="ctm-node-icon material-icons">shopping_cart_outlined</span>
-                    <div class="ctm-node-info">
-                        <span class="ctm-node-label">AATP</span>
-                        <span class="ctm-node-name">${aatpName(r)}</span>
-                    </div>
-                </div>
-            </div>`),
-    ].join('');
+    function attrPill(label, value) {
+        if (value === null || value === undefined || value === '') return '';
+        return `<span class="pd-attr">
+                    <span class="pd-attr-label">${label}</span>
+                    <span class="pd-attr-value">${value}</span>
+                </span>`;
+    }
+
+    function componentRow(r, index, type) {
+        const name = r.packageName || r.chargeDesc || r.chargeId || type;
+        const attrs = [
+            attrPill('Validity', r.validity || '—'),
+            attrPill('Mid. Expiry', r.midnightExpiry || '—'),
+            attrPill('Renewal', r.renewal || '—'),
+            attrPill('Rental', r.rental ?? '0'),
+            attrPill('Max Count', r.maxCount ?? '0'),
+            attrPill('Free Cycles', r.freeCycles ?? '0'),
+        ].join('');
+        const colorClass = type === 'DATP' ? 'pd-row--datp' : 'pd-row--aatp';
+        const badge = type === 'DATP' ? 'pd-badge--datp' : 'pd-badge--aatp';
+        return `
+        <div class="pd-component-row ${colorClass}">
+            <div class="pd-row-top">
+                <span class="pd-row-badge ${badge}">${type}</span>
+                <span class="pd-row-name">${name}</span>
+                <span class="pd-row-index">#${index + 1}</span>
+            </div>
+            <div class="pd-row-attrs">${attrs || '<span class="pd-no-attrs">No attributes</span>'}</div>
+        </div>`;
+    }
+
+    const datpHtml = datpRows.length
+        ? datpRows.map((r, i) => componentRow(r, i, 'DATP')).join('')
+        : '<div class="pd-empty-section">No DATP components</div>';
+
+    const aatpHtml = aatpRows.length
+        ? aatpRows.map((r, i) => componentRow(r, i, 'AATP')).join('')
+        : '<div class="pd-empty-section">No AATP components</div>';
 
     container.innerHTML = `
-        <div class="ctm-tree">
-
-            <!-- Root: tariffPackageDesc -->
-            <div class="ctm-node ctm-node--root">
-                <span class="ctm-node-icon material-icons">inventory_2</span>
-                <div class="ctm-node-info">
-                    <span class="ctm-node-label">Plan</span>
-                    <span class="ctm-node-name">${tpDesc}</span>
+        <div class="pd-sheet">
+            <div class="pd-plan-band">
+                <div class="pd-plan-band-left">
+                    <span class="pd-plan-label">SERVICE PLAN</span>
+                    <span class="pd-plan-name">${tpName}</span>
+                </div>
+                <div class="pd-plan-band-right">
+                    <span class="pd-plan-label">PACKAGE</span>
+                    <span class="pd-plan-pkg">${tpDesc}</span>
                 </div>
             </div>
-
-            <!-- Level 1 connector + TP child -->
-            <div class="ctm-branch">
-                <div class="ctm-v-line"></div>
-                <div class="ctm-child">
-                    <div class="ctm-connector"></div>
-                    <div class="ctm-node ctm-node--tp">
-                        <span class="ctm-node-icon material-icons">receipt_long</span>
-                        <div class="ctm-node-info">
-                            <span class="ctm-node-label">TP</span>
-                            <span class="ctm-node-name">${tpName}</span>
-                        </div>
+            <div class="pd-sections">
+                <div class="pd-section">
+                    <div class="pd-section-header pd-section-header--datp">
+                        <span class="material-icons pd-section-icon">add_circle_outline</span>
+                        <span class="pd-section-title">Default ATP</span>
+                        <span class="pd-section-count">${datpRows.length}</span>
                     </div>
+                    <div class="pd-section-body">${datpHtml}</div>
                 </div>
-
-                <!-- Level 2: DATP + AATP children of TP -->
-                ${(datpRows.length || aatpRows.length) ? `
-                <div class="ctm-branch ctm-branch--l2">
-                    <div class="ctm-v-line"></div>
-                    ${childrenHtml}
-                </div>` : ''}
+                <div class="pd-section">
+                    <div class="pd-section-header pd-section-header--aatp">
+                        <span class="material-icons pd-section-icon">shopping_cart</span>
+                        <span class="pd-section-title">Allowed ATP</span>
+                        <span class="pd-section-count">${aatpRows.length}</span>
+                    </div>
+                    <div class="pd-section-body">${aatpHtml}</div>
+                </div>
             </div>
-
-        </div>
-    `;
+        </div>`;
 }
 
 function closeCloneTree() {
@@ -2139,13 +2222,55 @@ function _cloneTreeOverlayClick(e) {
     if (e.target === document.getElementById('cloneTreeModal')) closeCloneTree();
 }
 
-function _cloneTreeAction(action) {
+document.addEventListener('click', function (e) {
+    if (e.target.id === 'tpDetailsModal') closeTpDetails();
+});
+
+// console.log("CLONE PAYLOAD:", JSON.stringify(payload, null, 2));
+
+async function _cloneTreeAction(action) {
     const modal = document.getElementById('cloneTreeModal');
     const tpDesc = modal.dataset.tpDesc;
     const tpId = modal.dataset.tpId;
+
     if (action === 'clone') {
-        // Wire to your POST /clone endpoint
-        alert(`Clone: ${tpDesc} (id: ${tpId})`);
+        const payload = _currentClonePayload;
+
+        console.log("CLONE PAYLOAD:", JSON.stringify(payload, null, 2));
+
+        if (payload == null) {
+            alert('Plan data not available. Please close and try again.');
+            return;
+        }
+
+        // Disable button to prevent double-submit
+        const cloneBtn = modal.querySelector('[onclick*="clone"]');
+        if (cloneBtn) { cloneBtn.disabled = true; cloneBtn.textContent = 'Cloning…'; }
+
+        try {
+            const res = await fetch('/clone', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await res.json();
+
+            if (!res.ok || result.error) {
+                alert(result.error || 'Clone failed. Please try again.');
+                return;
+            }
+
+            alert('✅ Cloned successfully!\nNew plan: ' + result.clonedTpName);
+            closeCloneTree();
+
+        } catch (err) {
+            console.error('Clone error:', err);
+            alert('Server error during clone. Please try again.');
+        } finally {
+            if (cloneBtn) { cloneBtn.disabled = false; cloneBtn.textContent = 'Clone'; }
+        }
+
     } else if (action === 'modify') {
         alert(`Modify: ${tpDesc}`);
     } else {
@@ -2161,28 +2286,6 @@ function openTpDetails(groupData) {
     const content = document.getElementById('tpModalContent');
 
     const fee = Number(group.activationFee || 0);
-
-    // ── Real OTT logos (direct CDN URLs) ──────────────────
-    const OTT_SERVICES = [
-        {
-            name: 'JioHotstar',
-            src: 'https://www.jiohotstar.com/favicon.ico',
-            fallback: 'https://play-lh.googleusercontent.com/N8wdJc9fXHWNFSHjFNBmMLBIsHTMVLvQWm0wAAOOVLvPz6jPE0O3hgGiHCBUaGnETQ=s96',
-            desc: 'TV Shows | Movies | Originals | Sports',
-        },
-        {
-            name: 'ZEE5',
-            src: 'https://akamaividz2.zee5.com/image/upload/w_559,h_559,c_scale,f_webp,q_auto:eco/resources/0-0-shorts/zeefavicon.png',
-            fallback: 'https://play-lh.googleusercontent.com/K2YZMc-arGqQrPjBT_BBORfTCNMvkVYi6hk1UHm7nzAE3-pjBYMBvZlRmFAZsXKlg7Y=s96',
-            desc: 'Award Winning Movies | Web series | TV Shows in 18 languages',
-        },
-        {
-            name: 'SonyLIV',
-            src: 'https://play-lh.googleusercontent.com/5kFbAj5LrFKKb42jDAfZ-rSR7nZ5kZSgd3xyRRn2OJUyFCxXU9V9pCvMWyGKWi2xSGM=s96',
-            fallback: 'https://play-lh.googleusercontent.com/5kFbAj5LrFKKb42jDAfZ-rSR7nZ5kZSgd3xyRRn2OJUyFCxXU9V9pCvMWyGKWi2xSGM=s96',
-            desc: 'Popular TV Shows | New series | Movies',
-        },
-    ];
 
     // ── Filter buckets: only VOICE, SMS, DATA ─────────────
     const ALLOWED = ['VOICE', 'SMS', 'DATA'];
@@ -2213,19 +2316,22 @@ function openTpDetails(groupData) {
         </div>`).join('');
 
     // ── OTT strip (small icons beside notes) ──────────────
-    const ottStripHtml = OTT_SERVICES.slice(0, 2).map(o =>
+    const ottStripHtml = _OTT_SERVICES.slice(0, 4).map(o =>
         `<img class="tp-modal-ott-img" src="${o.src}"
-              alt="${o.name}"
+              alt="${o.title}"
               onerror="this.src='${o.fallback}'">`
     ).join('');
 
     // ── Full OTT benefit list ──────────────────────────────
-    const ottListHtml = OTT_SERVICES.map(o => `
+    const ottListHtml = _OTT_SERVICES.map(o => `
         <div class="tp-modal-ott-item">
             <img class="tp-modal-ott-item-img" src="${o.src}"
-                 alt="${o.name}"
+                 alt="${o.title}"
                  onerror="this.src='${o.fallback}'">
-            <span class="tp-modal-ott-item-desc">${o.desc}</span>
+            <div class="tp-modal-ott-item-info">
+                <span class="tp-modal-ott-item-name">${o.title}</span>
+                <span class="tp-modal-ott-item-desc">${o.desc}</span>
+            </div>
         </div>`).join('');
 
     content.innerHTML = `
@@ -2250,19 +2356,20 @@ function openTpDetails(groupData) {
 
         <div class="tp-modal-benefits-title">additional benefits</div>
 
-        <div class="tp-modal-ott-list">
-            ${ottListHtml}
-        </div>
-
-        <div class="tp-modal-your-benefits">
-            <div class="tp-modal-your-benefits-title">your benefits</div>
-            <p class="tp-modal-your-benefits-text">
-                Get JioHotstar Mobile + 19 more OTTs including ZEE5,
-                SonyLIV, FanCode, Lionsgate Play &amp; more. Add-on
-                ${hasData ? buckets.find(b => b.balanceCategory === 'DATA').bucketUnitValue + ' Data.' : 'No extra data.'}
-                ${!hasSms ? 'No service validity.' : ''}
-                Pack validity 28 days.
-            </p>
+        <div class="tp-modal-scroll-body">
+            <div class="tp-modal-ott-list">
+                ${ottListHtml}
+            </div>
+            <div class="tp-modal-your-benefits">
+                <div class="tp-modal-your-benefits-title">your benefits</div>
+                <p class="tp-modal-your-benefits-text">
+                    Get JioHotstar Mobile + 7 more OTTs including ZEE5,
+                    SonyLIV, FanCode, Lionsgate Play &amp; more. Add-on
+                    ${hasData ? buckets.find(b => b.balanceCategory === 'DATA').bucketUnitValue + ' Data.' : 'No extra data.'}
+                    ${!hasSms ? 'No service validity.' : ''}
+                    Pack validity 28 days.
+                </p>
+            </div>
         </div>
     `;
 

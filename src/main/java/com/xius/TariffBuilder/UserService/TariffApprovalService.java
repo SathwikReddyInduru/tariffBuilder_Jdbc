@@ -4,7 +4,9 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.xius.TariffBuilder.Dto.TariffPackageDetails;
-import com.xius.TariffBuilder.Dto.TariffPackageDetailsDto;
 import com.xius.TariffBuilder.UserService.BundleService.CloneAtpResult;
 import com.xius.TariffBuilder.UserService.ServiceCloneService.CloneServiceResult;
 import com.xius.TariffBuilder.util.JsonStorage;
@@ -84,15 +85,18 @@ public class TariffApprovalService {
 	 * CLONE TARIFF
 	 *
 	 * Accepts the full request body from the caller.
-	 * Before executing any queries:
-	 * - tpName → tpName + "_CL"
-	 * - publicityId → publicityId + "_CL"
-	 * - chargeId → chargeId + "_CL" (chargeId is derived from tpName, e.g.
-	 * TP_T1_PR)
+	 * Before executing any queries the following fields
+	 * are suffixed with "_CLn" where n is the next
+	 * available clone number for that originalTpName
+	 * inside the given networkId:
 	 *
-	 * Returns the same result map as approve() plus the
-	 * cloned tpName and publicityId so the caller knows
-	 * what was created.
+	 * TP_T1 cloned first time → TP_T1_CL1
+	 * TP_T1 cloned again → TP_T1_CL2
+	 * TP_T2 cloned first time → TP_T2_CL1 (independent counter)
+	 *
+	 * The clone number is derived by querying
+	 * CS_RAT_TARIFF_PACKAGE for existing _CLn rows,
+	 * so it survives server restarts with no extra table.
 	 * =====================================================
 	 */
 	@Transactional(rollbackFor = Exception.class)
@@ -108,22 +112,28 @@ public class TariffApprovalService {
 		logger.info("Clone request received originalTpName={} networkId={} username={}",
 				originalTpName, networkId, username);
 
-		// ── 2. Build cloned names ─────────────────────────────────────────────
-		String clonedTpName = originalTpName + "_CL";
-		String clonedPublicityId = requestBody.get("data") != null
-				? ((Map<String, Object>) requestBody.get("data")).get("publicityId").toString() + "_CL"
-				: null;
+		// ── 2. Resolve next clone number for this tpName + networkId ─────────
+		int cloneNumber = resolveNextCloneNumber(originalTpName, networkId);
+		String cloneSuffix = "_CL" + cloneNumber;
+
+		logger.info("Resolved cloneSuffix={} for originalTpName={} networkId={}",
+				cloneSuffix, originalTpName, networkId);
+
+		// ── 3. Build cloned names ─────────────────────────────────────────────
+		String clonedTpName = originalTpName + cloneSuffix;
+		Map<String, Object> originalData = (Map<String, Object>) requestBody.get("data");
+		String originalPublicityId = originalData.get("publicityId").toString();
+		String clonedPublicityId = originalPublicityId + cloneSuffix;
 
 		logger.info("Clone names clonedTpName={} clonedPublicityId={}", clonedTpName, clonedPublicityId);
 
-		// ── 3. Deep-copy and mutate the data map ──────────────────────────────
-		Map<String, Object> originalData = (Map<String, Object>) requestBody.get("data");
+		// ── 4. Deep-copy and mutate the data map ──────────────────────────────
 		Map<String, Object> clonedData = new HashMap<>(originalData);
 
 		clonedData.put("publicityId", clonedPublicityId);
 		clonedData.put("tariffPackageDesc", clonedTpName);
 
-		// chargeId is typically tpName + "_PR"; update it to match the cloned name
+		// chargeId is typically tpName + "_PR"; replace the tpName portion only
 		String originalChargeId = originalData.get("chargeId").toString();
 		String clonedChargeId = originalChargeId.replace(originalTpName, clonedTpName);
 		clonedData.put("chargeId", clonedChargeId);
@@ -131,18 +141,72 @@ public class TariffApprovalService {
 		logger.info("Cloned data publicityId={} tariffPackageDesc={} chargeId={}",
 				clonedPublicityId, clonedTpName, clonedChargeId);
 
-		// ── 4. Execute all tariff creation queries with cloned values ─────────
+		// ── 5. Execute all tariff creation queries with cloned values ─────────
 		Map<String, Object> result = executeTariffCreation(clonedData, clonedTpName, networkId, username);
 
-		// ── 5. Append clone-specific fields to response ───────────────────────
+		// ── 6. Append clone-specific fields to response ───────────────────────
 		result.put("clonedTpName", clonedTpName);
 		result.put("clonedPublicityId", clonedPublicityId);
 		result.put("clonedChargeId", clonedChargeId);
+		result.put("cloneNumber", cloneNumber);
 
 		long time = System.currentTimeMillis() - startTime;
-		logger.info("Tariff cloned clonedTpName={} executionTime={}ms", clonedTpName, time);
+		logger.info("Tariff cloned clonedTpName={} cloneNumber={} executionTime={}ms",
+				clonedTpName, cloneNumber, time);
 
 		return result;
+	}
+
+	/*
+	 * =====================================================
+	 * RESOLVE NEXT CLONE NUMBER
+	 *
+	 * Queries CS_RAT_TARIFF_PACKAGE for rows whose
+	 * TARIFF_PACKAGE_DESC matches the pattern
+	 * "<originalTpName>_CL<digits>" for the given networkId,
+	 * then returns max(n) + 1.
+	 *
+	 * Examples:
+	 * No clones exist yet → returns 1 (suffix = _CL1)
+	 * _CL1 exists → returns 2 (suffix = _CL2)
+	 * _CL1, _CL2, _CL3 exist → returns 4 (suffix = _CL4)
+	 * =====================================================
+	 */
+	private int resolveNextCloneNumber(String originalTpName, Long networkId) {
+
+		// Fetch all existing clone desc values that match the pattern
+		List<String> existingDescs = jdbcTemplate.queryForList("""
+				select TARIFF_PACKAGE_DESC
+				from CS_RAT_TARIFF_PACKAGE
+				where NETWORK_ID = ?
+				and TARIFF_PACKAGE_DESC like ?
+				""",
+				String.class,
+				networkId,
+				originalTpName + "_CL%");
+
+		// Parse the numeric suffix from each match and find the max
+		String prefix = originalTpName + "_CL";
+		int max = 0;
+
+		for (String desc : existingDescs) {
+			if (desc.startsWith(prefix)) {
+				String tail = desc.substring(prefix.length());
+				try {
+					int n = Integer.parseInt(tail);
+					if (n > max) {
+						max = n;
+					}
+				} catch (NumberFormatException ignored) {
+					// e.g. a row like "TP_T1_CL_SOMETHING" — not our pattern, skip
+				}
+			}
+		}
+
+		logger.info("resolveNextCloneNumber originalTpName={} networkId={} existingMax={} nextNumber={}",
+				originalTpName, networkId, max, max + 1);
+
+		return max + 1;
 	}
 
 	/*
@@ -538,22 +602,7 @@ public class TariffApprovalService {
 		logger.info("TP removed from json storage tpName={}", tpName);
 	}
 
-	public List<Map<String, Object>> getTariffPackages(Long networkId) {
-
-		String sql = """
-				SELECT
-				    tariff_package_id,
-				    tariff_package_desc
-				FROM cs_rat_tariff_package
-				WHERE network_id = ?
-				""";
-
-		return jdbcTemplate.queryForList(sql, networkId);
-	}
-
-	public List<TariffPackageDetails> getTariffPackageDetails(
-			Long networkId,
-			Long tariffPackageId) {
+	public Map<String, Object> getTariffPackageDetails(Long networkId, Long tariffPackageId) {
 
 		String sql = """
 				SELECT
@@ -561,68 +610,181 @@ public class TariffApprovalService {
 				       tp.TARIFF_PACKAGE_DESC,
 				       tp.NETWORK_ID,
 				       tp.PACKAGE_TYPE,
-				       tp.IS_CORPORATE_YN,
 				       tp.TARIFF_PACK_CATEGORY,
+				       tp.PUBLICITY_ID,
+				       tp.END_DATE,
+				       tp.CHARGE_ID,
+				       tp.IS_CORPORATE_YN,
+
+				       tpid.RECORD_INSERTED_BY,
 
 				       tspm.SERVICE_PACKAGE_ID,
 				       tspm.TARIFF_PLAN_TYPE,
-				       tspm.CHARGE_ID,
-				       tspm.EFFECTIVE_START_OFFSET,
 				       tspm.SERVICE_DURATION,
 				       tspm.PRIORITY,
-				       tspm.CREATED_OR_MODIFIED_DATE,
 
-				       spp.SERVICE_PLAN_ID,
+				       sp.SERVICE_PACKAGE_DESC,
 
 				       pci.CHARGE_DESC,
-				       pci.SERVICE_TYPE,
+				       pci.CHARGE_ID,
 				       pci.RENTAL_TYPE,
-				       pci.RENTAL_PERIOD,
-				       pci.ALCS_ID,
-				       pci.ACTIVATION_FEE,
 				       pci.RENTAL_FEE,
 				       pci.RENTAL_FREE_CYCLES,
-				       pci.PRO_RAT_YN,
-				       pci.ADV_YN,
-				       pci.TAX1,
-				       pci.TAX2,
-				       pci.TAX3,
-				       pci.ADD_PACK_CHARGE_YN,
-				       pci.RENTAL_DEDUCTION_IN_GRACE,
-				       pci.DEACTIVATION_FEE,
 				       pci.AUTO_RENEWAL,
-				       pci.CREATED_BY,
-				       pci.CREATED_DATE,
 				       pci.PLAN_EXP_MIDNIGHT_YN,
-				       pci.RESERVED_AMOUNT,
 				       pci.MAX_RENEWAL_COUNT,
-				       pci.SALES_FEE,
-				       pci.ATP_BNDL_BKT_MULTIREC_INS
+				       pci.SERVICE_TYPE,
+
+				       spp.SERVICE_PLAN_ID
 
 				FROM CS_RAT_TARIFF_PACKAGE tp
+
+				LEFT JOIN CS_RAT_TPID_VS_PUBLICITYID tpid
+				       ON tp.TARIFF_PACKAGE_ID = tpid.TARIFF_PACKAGE_ID
+				      AND tp.NETWORK_ID = tpid.NETWORK_ID
 
 				LEFT JOIN CS_RAT_TARIFF_SERVICE_PACK_MAP tspm
 				       ON tp.TARIFF_PACKAGE_ID = tspm.TARIFF_PACKAGE_ID
 				      AND tp.NETWORK_ID = tspm.NETWORK_ID
 
-				LEFT JOIN CS_RAT_SERVICE_PLAN_PACKAGE spp
-				       ON tspm.SERVICE_PACKAGE_ID = spp.SERVICE_PACKAGE_ID
-				      AND tspm.NETWORK_ID = spp.NETWORK_ID
+				LEFT JOIN CS_RAT_SERVICE_PACKAGE sp
+				       ON tspm.SERVICE_PACKAGE_ID = sp.SERVICE_PACKAGE_ID
+				      AND tspm.NETWORK_ID = sp.NETWORK_ID
 
 				LEFT JOIN CS_RAT_PERIODIC_CHARGE_INFO pci
 				       ON tspm.CHARGE_ID = pci.CHARGE_ID
 				      AND tspm.NETWORK_ID = pci.NETWORK_ID
 
+				LEFT JOIN CS_RAT_SERVICE_PLAN_PACKAGE spp
+				       ON tspm.SERVICE_PACKAGE_ID = spp.SERVICE_PACKAGE_ID
+				      AND tspm.NETWORK_ID = spp.NETWORK_ID
+
 				WHERE tp.NETWORK_ID = ?
 				  AND tp.TARIFF_PACKAGE_ID = ?
 
-				ORDER BY tspm.SERVICE_PACKAGE_ID
+				ORDER BY tspm.TARIFF_PLAN_TYPE
 				""";
 
-		return jdbcTemplate.query(
-				sql,
-				new BeanPropertyRowMapper<>(TariffPackageDetails.class),
-				networkId,
-				tariffPackageId);
+		List<TariffPackageDetails> list = jdbcTemplate.query(sql,
+				new BeanPropertyRowMapper<>(TariffPackageDetails.class), networkId, tariffPackageId);
+
+		if (list == null || list.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		TariffPackageDetails first = list.get(0);
+
+		Map<String, Object> response = new LinkedHashMap<>();
+
+		response.put("tpName", first.getTariffPackageDesc());
+
+		response.put("username", first.getRecordInsertedBy());
+
+		response.put("networkId", first.getNetworkId());
+
+		Map<String, Object> data = new LinkedHashMap<>();
+
+		data.put("username", first.getRecordInsertedBy());
+
+		data.put("isUpdate", true);
+
+		data.put("submittedOn", "");
+
+		data.put("packageType", first.getPackageType());
+
+		data.put("tariffPackCategory", first.getTariffPackCategory());
+
+		data.put("tariffPackageDesc", first.getTariffPackageDesc());
+
+		// data.put("charge", "");
+
+		data.put("endDate", first.getEndDate() != null
+				? java.time.LocalDate.parse(first.getEndDate().toString().substring(0, 10))
+						.format(formatter)
+				: "");
+
+		data.put("publicityId", first.getPublicityId());
+
+		data.put("chargeId", first.getChargeId());
+
+		data.put("isCorporateYn", "Y".equalsIgnoreCase(first.getIsCorporateYn()));
+
+		List<Map<String, Object>> defaultAtps = new ArrayList<>();
+
+		List<Map<String, Object>> allowedAtps = new ArrayList<>();
+
+		for (TariffPackageDetails row : list) {
+
+			// TP
+			if ("TP".equalsIgnoreCase(row.getTariffPlanType())) {
+
+				data.put("tariffPlanId", row.getServicePlanId());
+
+				// data.put("tariffPlanName", row.getChargeDesc());
+				data.put("tariffPlanName", row.getTariffPackageDesc());
+			}
+
+			// DATP
+			else if ("DATP".equalsIgnoreCase(row.getTariffPlanType())) {
+
+				Map<String, Object> atp = new LinkedHashMap<>();
+
+				atp.put("servicePackageId", row.getServicePackageId());
+
+				atp.put("chargeId", row.getChargeId());
+
+				atp.put("packageName", row.getServicePackageDesc());
+
+				atp.put("validity", row.getRentalType());
+
+				atp.put("midnightExpiry", "Y".equalsIgnoreCase(row.getPlanExpMidnightYn()) ? "Yes" : "No");
+
+				atp.put("renewal", "Y".equalsIgnoreCase(row.getAutoRenewal()) ? "Yes" : "No");
+
+				atp.put("rental", row.getRentalFee());
+
+				atp.put("maxCount", row.getMaxRenewalCount());
+
+				atp.put("freeCycles", String.valueOf(row.getRentalFreeCycles()));
+
+				defaultAtps.add(atp);
+			}
+
+			// AATP
+			else if ("AATP".equalsIgnoreCase(row.getTariffPlanType())) {
+
+				Map<String, Object> atp = new LinkedHashMap<>();
+
+				atp.put("servicePackageId", row.getServicePackageId());
+
+				atp.put("chargeId", row.getChargeId());
+
+				atp.put("packageName", row.getServicePackageDesc());
+
+				atp.put("validity", row.getRentalType());
+
+				atp.put("midnightExpiry", "Y".equalsIgnoreCase(row.getPlanExpMidnightYn()) ? "Yes" : "No");
+
+				atp.put("renewal", "Y".equalsIgnoreCase(row.getAutoRenewal()) ? "Yes" : "No");
+
+				atp.put("rental", row.getRentalFee());
+
+				atp.put("maxCount", row.getMaxRenewalCount());
+
+				atp.put("freeCycles", String.valueOf(row.getRentalFreeCycles()));
+
+				allowedAtps.add(atp);
+			}
+		}
+
+		data.put("selectedSvcs_s4", "[]");
+
+		data.put("defaultAtps", defaultAtps);
+
+		data.put("allowedAtps", allowedAtps);
+
+		response.put("data", data);
+
+		return response;
 	}
 }

@@ -140,6 +140,8 @@ public class BuilderController {
 
             session.setAttribute("privilegeIds", privilegeIds);
 
+            System.out.println(privilegeIds);
+
             logger.info("Login successful user={} networkId={} privilegesCount={}", request.getLoginId(),
                     loginData.get("networkId"), privileges.size());
 
@@ -549,14 +551,6 @@ public class BuilderController {
             @RequestParam Integer networkId) {
 
         List<TariffPackageDetailsDto> response = tariffPackageService.getTariffPackageDetails(networkId);
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/tariff-packages/{networkId}")
-    public ResponseEntity<?> getTariffPackages(@PathVariable Long networkId) {
-
-        List<Map<String, Object>> response = tariffApprovalService.getTariffPackages(networkId);
 
         return ResponseEntity.ok(response);
     }

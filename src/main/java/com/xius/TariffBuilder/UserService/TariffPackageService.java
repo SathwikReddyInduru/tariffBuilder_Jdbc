@@ -19,7 +19,8 @@ public class TariffPackageService {
     public List<TariffPackageDetailsDto> getTariffPackageDetails(Integer networkId) {
 
         String sql = """
-                SELECT a.tariff_package_desc,
+                SELECT a.tariff_package_id,
+                a.tariff_package_desc,
                        b.activation_fee,
                        DECODE(rental_type,
                               'M', 'Monthly',
@@ -49,7 +50,9 @@ public class TariffPackageService {
                   AND e.bucket_id = f.bucket_id
                   AND a.network_id = ?
                   AND tariff_plan_type = 'DATP'
-                GROUP BY a.tariff_package_desc,
+                GROUP BY
+                a.tariff_package_id,
+                a.tariff_package_desc,
                          b.activation_fee,
                          rental_type,
                          f.balance_category
@@ -60,6 +63,7 @@ public class TariffPackageService {
 
             TariffPackageDetailsDto dto = new TariffPackageDetailsDto();
 
+            dto.setTariff_package_id(rs.getLong("tariff_package_id"));
             dto.setTariffPackageDesc(rs.getString("tariff_package_desc"));
             dto.setActivationFee(rs.getDouble("activation_fee"));
             dto.setRentalType(rs.getString("rental_type"));

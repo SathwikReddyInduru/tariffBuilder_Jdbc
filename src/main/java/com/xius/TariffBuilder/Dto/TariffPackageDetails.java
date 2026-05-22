@@ -21,7 +21,7 @@ public class TariffPackageDetails {
 
     private Long servicePlanId;
 
-    private String chargeDesc;
+    private String servicePackageDesc;
     private Long serviceType;
     private String rentalType;
     private Long rentalPeriod;
@@ -51,12 +51,24 @@ public class TariffPackageDetails {
     private Long maxRenewalCount;
     private Double salesFee;
     private String atpBndlBktMultirecIns;
+    private String publicityId;
+    private String EndDate;
+
+    private String recordInsertedBy;
 
     public Long getTariffPackageId() {
         return tariffPackageId;
     }
 
-    public void setTariffPackageId(Long tariffPackageId) {
+    public String getEndDate() {
+		return EndDate;
+	}
+
+	public void setEndDate(String endDate) {
+		EndDate = endDate;
+	}
+
+	public void setTariffPackageId(Long tariffPackageId) {
         this.tariffPackageId = tariffPackageId;
     }
 
@@ -162,14 +174,6 @@ public class TariffPackageDetails {
 
     public void setServicePlanId(Long servicePlanId) {
         this.servicePlanId = servicePlanId;
-    }
-
-    public String getChargeDesc() {
-        return chargeDesc;
-    }
-
-    public void setChargeDesc(String chargeDesc) {
-        this.chargeDesc = chargeDesc;
     }
 
     public Long getServiceType() {
@@ -354,6 +358,30 @@ public class TariffPackageDetails {
 
     public void setAtpBndlBktMultirecIns(String atpBndlBktMultirecIns) {
         this.atpBndlBktMultirecIns = atpBndlBktMultirecIns;
+    }
+
+    public String getPublicityId() {
+        return publicityId;
+    }
+
+    public void setPublicityId(String publicityId) {
+        this.publicityId = publicityId;
+    }
+
+    public String getRecordInsertedBy() {
+        return recordInsertedBy;
+    }
+
+    public void setRecordInsertedBy(String recordInsertedBy) {
+        this.recordInsertedBy = recordInsertedBy;
+    }
+
+    public String getServicePackageDesc() {
+        return servicePackageDesc;
+    }
+
+    public void setServicePackageDesc(String servicePackageDesc) {
+        this.servicePackageDesc = servicePackageDesc;
     }
 
 }

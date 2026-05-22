@@ -54,13 +54,15 @@
                 <span class="main-node-label">APPROVER</span>
             </a>
 
-            <div style="margin-top:auto;"></div>
+            <div class="main-rail-divider"></div>
 
-            <a href="#" class="main-node" id="mn-saved" title="Drafts" th:classappend="${activeStep == 0} ? ' hidden'"
+            <a href="#" class="main-node" id="mn-clone" title="Clone TPs" 
                 onclick="openClone(); return false;">
                 <span class="main-node-icon material-icons">copy_all</span>
                 <span class="main-node-label">CLONE TP's</span>
             </a>
+
+            <div style="margin-top:auto;"></div>
 
             <a href="#" class="main-node" id="mn-saved" title="Drafts" th:classappend="${activeStep == 0} ? ' hidden'"
                 onclick="openSaved(); return false;">
@@ -153,8 +155,7 @@
                 <!-- Header pill bar — with search bar -->
                 <div class="clone-page-header">
                     <div class="clone-page-header-left">
-                        <span class="material-icons">copy_all</span>
-                        <span class="clone-page-header-title">Clone a Tariff Plan</span>
+                        <span class="clone-page-header-title">Tariff Packages</span>
                         <span class="clone-page-header-badge" id="clonePlanCount">0 plans</span>
                     </div>
                     <div class="clone-search-wrap">
@@ -209,6 +210,8 @@
         const USERNAME = /*[[${username}]]*/ 'User';
         const SESSION_ID = /*[[${sessionId}]]*/ '';
         const NETWORK_ID = /*[[${networkId}]]*/ null;
+
+        console.log(PRIVILEGE_IDS);
     </script>
     <script th:src="@{/js/layout.js}"></script>
 
@@ -241,18 +244,12 @@
 
             <button class="tp-modal-close" onclick="closeCloneTree()">✕</button>
 
-            <div class="ctm-header">
-                <span class="material-icons ctm-header-icon">account_tree</span>
-                <span class="ctm-header-title">Plan Structure</span>
-            </div>
-
-            <!-- Tree body injected by JS -->
+            <!-- Data panel injected by _renderCloneTree() -->
             <div id="cloneTreeBody" class="ctm-body"></div>
 
             <!-- Action buttons -->
             <div class="ctm-actions">
                 <button class="ctm-btn ctm-btn--cancel" onclick="_cloneTreeAction('cancel')">Cancel</button>
-                <button class="ctm-btn ctm-btn--modify" onclick="_cloneTreeAction('modify')">Modify</button>
                 <button class="ctm-btn ctm-btn--clone" onclick="_cloneTreeAction('clone')">Clone</button>
             </div>
 
@@ -262,6 +259,14 @@
     <!-- ── Filter Modal ───────────────────────────────────────── -->
     <div id="tpFilterModal" class="tp-modal-overlay" onclick="_filterOverlayClick(event)">
         <div class="tp-modal tp-filter-modal">
+
+            <button class="tp-modal-close"
+                onclick="document.getElementById('tpFilterModal').classList.remove('active')">✕</button>
+
+            <div class="ctm-header">
+                <span class="material-icons ctm-header-icon">tune</span>
+                <span class="ctm-header-title">Plan Filters</span>
+            </div>
 
             <!-- category -->
             <div class="tpf-section-label">category</div>
