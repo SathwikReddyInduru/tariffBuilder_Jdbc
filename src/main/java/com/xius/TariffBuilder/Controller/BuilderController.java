@@ -140,8 +140,6 @@ public class BuilderController {
 
             session.setAttribute("privilegeIds", privilegeIds);
 
-            System.out.println(privilegeIds);
-
             logger.info("Login successful user={} networkId={} privilegesCount={}", request.getLoginId(),
                     loginData.get("networkId"), privileges.size());
 

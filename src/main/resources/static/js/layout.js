@@ -2251,7 +2251,7 @@ async function _cloneTreeAction(action) {
             const res = await fetch('/clone', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload.data ?? payload)
             });
 
             const result = await res.json();
