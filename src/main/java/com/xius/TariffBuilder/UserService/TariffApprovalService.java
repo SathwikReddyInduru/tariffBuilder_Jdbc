@@ -552,6 +552,10 @@ public class TariffApprovalService {
 
 		Map<String, Object> atp = atps.get(0);
 
+		Object rentalPeriod = "O".equals(atp.get("validity"))
+				? atp.getOrDefault("validityDays", 1)
+				: 1;
+
 		jdbcTemplate.update("""
 				insert into CS_RAT_PERIODIC_CHARGE_INFO
 				(
@@ -571,7 +575,7 @@ public class TariffApprovalService {
 				values (?,?,?,?,?,?,?,?,?,?,?,?)
 				""",
 				chargeId, chargeId, networkId, data.get("tariffPlanId"),
-				atp.get("validity"), 1, atp.get("rental"),
+				atp.get("validity"), rentalPeriod, atp.get("rental"),
 				atp.get("freeCycles"), convertYN(atp.get("renewal")),
 				convertYN(atp.get("midnightExpiry")), atp.get("maxCount"), username);
 	}
@@ -736,6 +740,10 @@ public class TariffApprovalService {
 				atp.put("packageName", row.getServicePackageDesc());
 
 				atp.put("validity", row.getRentalType());
+
+				atp.put("validityDays", "O".equals(row.getRentalType())
+						? String.valueOf(row.getRentalPeriod())
+						: "");
 
 				atp.put("midnightExpiry", "Y".equalsIgnoreCase(row.getPlanExpMidnightYn()) ? "Yes" : "No");
 

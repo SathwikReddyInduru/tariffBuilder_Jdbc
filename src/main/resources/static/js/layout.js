@@ -387,11 +387,17 @@ function setModuleUI(module) {
     const configInput = document.getElementById('configName');
 
     // ── Active node highlight ──
+    const cloneNode = document.getElementById('mn-clone');
     if (builderNode) builderNode.classList.toggle('active', module === 'builder');
     if (approverNode) approverNode.classList.toggle('active', module === 'approver');
+    if (cloneNode) cloneNode.classList.toggle('active', module === 'clone');
 
-    if (module === 'builder') {
-        // Show step rail always for builder
+    if (module === 'clone') {
+        if (stepRail) stepRail.classList.add('collapsed');
+        if (sidebar) sidebar.classList.add('collapsed');
+        if (footerActions) footerActions.style.display = 'none';
+        if (configInput) configInput.style.display = 'none';
+    } else if (module === 'builder') {
         if (stepRail) stepRail.classList.remove('collapsed');
         if (footerActions) footerActions.style.display = 'flex';
         if (configInput) configInput.style.display = 'block';
@@ -785,6 +791,8 @@ async function saveConfiguration() {
 
             validity: item.validity,
 
+            validityDays: item.validityDays || "",
+
             midnightExpiry: item.midnightExpiry,
 
             renewal: item.renewal,
@@ -805,6 +813,8 @@ async function saveConfiguration() {
             packageName: item.name,
 
             validity: item.validity,
+
+            validityDays: item.validityDays || "",
 
             midnightExpiry: item.midnightExpiry,
 
@@ -876,6 +886,8 @@ function clearBuilderSession() {
     sessionStorage.removeItem('pkgSubType');
     sessionStorage.removeItem("isUpdate");
     sessionStorage.removeItem('loadedFromDraft');
+    sessionStorage.removeItem('cloneMode');
+    sessionStorage.removeItem('clonePayload');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -970,6 +982,15 @@ function selectPackage(cardElement) {
 
 function loadHierarchy(tpName) {
 
+    const VALIDITY_LABELS = {
+        'M': 'Monthly', 'O': 'Others', 'D': 'Daily',
+        'W': 'Weekly', 'F': 'Fixed', 'U': 'Unlimited', 'Y': 'Yearly'
+    };
+    function validityLabel(code) {
+        if (!code || code === '—') return code || '—';
+        return VALIDITY_LABELS[code] || code;
+    }
+
     fetch('/admin/hierarchy/' + tpName)
         .then(res => res.json())
         .then(tp => {
@@ -1024,7 +1045,7 @@ function loadHierarchy(tpName) {
                 <div class="component-box">
                     <div class="comp-name">${item.packageName}</div>
                     <div class="comp-details">
-                        <span class="pill"><strong>Validity:</strong> ${item.validity || '—'}</span>
+                        <span class="pill"><strong>Validity:</strong> ${validityLabel(item.validity)}</span>
                         <span class="pill"><strong>Midnight Expiry:</strong> ${item.midnightExpiry || '—'}</span>
                         <span class="pill"><strong>Renewal:</strong> ${item.renewal || '—'}</span>
                         <span class="pill"><strong>Rental:</strong> ${item.rental || '0'}</span>
@@ -1043,7 +1064,7 @@ function loadHierarchy(tpName) {
                 <div class="component-box">
                     <div class="comp-name">${item.packageName}</div>
                     <div class="comp-details">
-                        <span class="pill"><strong>Validity:</strong> ${item.validity || '—'}</span>
+                        <span class="pill"><strong>Validity:</strong> ${validityLabel(item.validity)}</span>
                         <span class="pill"><strong>Midnight Expiry:</strong> ${item.midnightExpiry || '—'}</span>
                         <span class="pill"><strong>Renewal:</strong> ${item.renewal || '—'}</span>
                         <span class="pill"><strong>Rental:</strong> ${item.rental || '0'}</span>
@@ -1248,6 +1269,7 @@ function loadSavedPackage(index) {
             id: a.servicePackageId,
             name: a.packageName,
             validity: a.validity,
+            validityDays: a.validityDays || "",
             midnightExpiry: a.midnightExpiry,
             renewal: a.renewal,
             rental: a.rental,
@@ -1261,6 +1283,7 @@ function loadSavedPackage(index) {
             id: a.servicePackageId,
             name: a.packageName,
             validity: a.validity,
+            validityDays: a.validityDays || "",
             midnightExpiry: a.midnightExpiry,
             renewal: a.renewal,
             rental: a.rental,
@@ -1739,8 +1762,8 @@ function openClone() {
     if (headerPill) headerPill.style.display = 'none';
 
     // 2. Collapse step-rail & sidebar (clone page doesn't need them)
-    if (stepRail) stepRail.classList.add('collapsed');
-    if (sidebar) sidebar.classList.add('collapsed');
+    //    setModuleUI handles nav highlight + rail/sidebar state
+    setModuleUI('clone');
 
     // 3. Show the clone page container (flex, then animate in)
     _tpSelected.clear();
@@ -1785,13 +1808,12 @@ function closeClonePage() {
         if (workBody) workBody.style.display = '';
         if (headerPill) headerPill.style.display = '';
 
-        // Restore rails based on current module/step
+        // Restore rails + active nav node based on current module/step
         const step = getActiveStep();
         if (step > 0) {
-            if (stepRail) stepRail.classList.remove('collapsed');
-            if (sidebar && (step === 2 || step === 3 || step === 4)) {
-                sidebar.classList.remove('collapsed');
-            }
+            setModuleUI('builder');
+        } else if (window.location.pathname.startsWith('/builder/admin')) {
+            setModuleUI('approver');
         }
 
         _tpSelected.clear();
@@ -2153,7 +2175,7 @@ function _renderCloneTree(container, tpDesc, response) {
     function componentRow(r, index, type) {
         const name = r.packageName || r.chargeDesc || r.chargeId || type;
         const attrs = [
-            attrPill('Validity', r.validity || '—'),
+            attrPill('Validity', (r.validity ? ({ 'M': 'Monthly', 'O': 'Others', 'D': 'Daily', 'W': 'Weekly', 'F': 'Fixed', 'U': 'Unlimited', 'Y': 'Yearly' }[r.validity] || r.validity) : '—')),
             attrPill('Mid. Expiry', r.midnightExpiry || '—'),
             attrPill('Renewal', r.renewal || '—'),
             attrPill('Rental', r.rental ?? '0'),
@@ -2251,7 +2273,7 @@ async function _cloneTreeAction(action) {
             const res = await fetch('/clone', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload.data ?? payload)
+                body: JSON.stringify(payload)
             });
 
             const result = await res.json();
@@ -2272,7 +2294,66 @@ async function _cloneTreeAction(action) {
         }
 
     } else if (action === 'modify') {
-        alert(`Modify: ${tpDesc}`);
+        const payload = _currentClonePayload;
+        if (!payload) {
+            alert('Plan data not available. Please close and try again.');
+            return;
+        }
+
+        const d = payload.data || payload;
+
+        // Build builder state from the plan data (same shape as loadSavedPackage)
+        const state = {
+            s2: [{ id: d.tariffPlanId, name: d.tariffPlanName }],
+            s3: (d.defaultAtps || []).map(a => ({
+                id: a.servicePackageId,
+                name: a.packageName,
+                validity: a.validity,
+                validityDays: a.validityDays || "",
+                midnightExpiry: a.midnightExpiry,
+                renewal: a.renewal,
+                rental: a.rental,
+                maxCount: a.maxCount,
+                freeCycles: a.freeCycles
+            })),
+            s4: (d.allowedAtps || []).map(a => ({
+                id: a.servicePackageId,
+                name: a.packageName,
+                validity: a.validity,
+                validityDays: a.validityDays || "",
+                midnightExpiry: a.midnightExpiry,
+                renewal: a.renewal,
+                rental: a.rental,
+                maxCount: a.maxCount,
+                freeCycles: a.freeCycles
+            })),
+            price: d.charge || '',
+            publicityCode: d.publicityId || '',
+            endDate: (function () {
+                if (!d.endDate) return '';
+                const p = d.endDate.split('/');
+                return p.length === 3 ? `${p[2]}-${p[0]}-${p[1]}` : d.endDate;
+            })(),
+            isCorporate: d.isCorporateYn || false
+        };
+
+        sessionStorage.setItem('state', JSON.stringify(state));
+        sessionStorage.setItem('configName', payload.tpName || d.tariffPackageDesc || '');
+        sessionStorage.setItem('pkgType', d.packageType || '');
+        sessionStorage.setItem('pkgSubType', d.tariffPackCategory || 'NORMAL');
+        sessionStorage.setItem('selectedSvcs_s2', d.selectedSvcs_s2 || '[]');
+        sessionStorage.setItem('selectedSvcs_s3', d.selectedSvcs_s3 || '[]');
+        sessionStorage.setItem('selectedSvcs_s4', d.selectedSvcs_s4 || '[]');
+
+        // Flag: step5 will show "Clone Package" instead of "Save Config"
+        sessionStorage.setItem('cloneMode', 'true');
+        // Store the original full payload so Clone button in step5 can POST it
+        sessionStorage.setItem('clonePayload', JSON.stringify(payload));
+
+        closeCloneTree();
+        window.isInternalNavigation = true;
+        window.location.href = '/builder/step1';
+
     } else {
         closeCloneTree();
     }
