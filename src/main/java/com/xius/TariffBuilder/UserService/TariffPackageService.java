@@ -38,6 +38,8 @@ public class TariffPackageService {
 				        'Y', 'Yearly'
 				    ) rental_type,
 
+				    rental_period,
+
 				    f.balance_category,
 
 				    CASE
@@ -45,17 +47,31 @@ public class TariffPackageService {
 				        THEN CASE
 				                WHEN SUM(f.bucket_unit_value) > 99999
 				                THEN 'UNLIMITED'
-				                ELSE fn_data_unit_converter(SUM(f.bucket_unit_value))
+				                ELSE fn_data_unit_converter(
+				                        SUM(f.bucket_unit_value)
+				                     )
 				             END
 
 				        WHEN f.balance_category = 'SMS'
-				        THEN SUM(f.bucket_unit_value) || ' SMS'
+				        THEN CASE
+				                WHEN SUM(f.bucket_unit_value) > 99999
+				                THEN 'UNLIMITED'
+				                ELSE SUM(f.bucket_unit_value) || ' SMS'
+				             END
 
 				        WHEN f.balance_category = 'VOICE'
-				        THEN SUM(f.bucket_unit_value) || ' Sec'
+				        THEN CASE
+				                WHEN SUM(f.bucket_unit_value) > 99999
+				                THEN 'UNLIMITED'
+				                ELSE SUM(f.bucket_unit_value) || ' Sec'
+				             END
 
 				        WHEN f.balance_category = 'GLOBAL'
-				        THEN SUM(f.bucket_unit_value) || ' Amt'
+				        THEN CASE
+				                WHEN SUM(f.bucket_unit_value) > 99999
+				                THEN 'UNLIMITED'
+				                ELSE SUM(f.bucket_unit_value) || ' Amt'
+				             END
 				    END bucket_unit_value
 
 				FROM cs_rat_tariff_package a,
@@ -71,16 +87,19 @@ public class TariffPackageService {
 				AND d.bundle_or_discount_id = e.bundle_id
 				AND e.bucket_id = f.bucket_id
 				AND a.network_id = ?
-				AND c.tariff_plan_type = 'DATP'
+				AND tariff_plan_type = 'DATP'
 
 				GROUP BY
+				    b.charge_id,
+				    f.bucket_id,
 				    a.tariff_package_id,
 				    a.tariff_package_desc,
 				    b.activation_fee,
 				    rental_type,
+				    rental_period,
 				    f.balance_category
 
-				ORDER BY b.activation_fee DESC
+				ORDER BY activation_fee DESC
 				""";
 
 		String rateGroupSql = """
@@ -104,7 +123,7 @@ public class TariffPackageService {
 				AND e.network_id = ?
 				""";
 
-		// Main Tariff Response
+		// Main Query Result
 		List<TariffPackageDetailsDto> tariffList = jdbcTemplate.query(
 				tariffSql,
 				(rs, rowNum) -> {
@@ -123,6 +142,9 @@ public class TariffPackageService {
 					dto.setRentalType(
 							rs.getString("rental_type"));
 
+					dto.setRentalPeriod(
+							rs.getLong("rental_period"));
+
 					dto.setBalanceCategory(
 							rs.getString("balance_category"));
 
@@ -137,12 +159,12 @@ public class TariffPackageService {
 				},
 				networkId);
 
-		// Rate Group Response
+		// Rate Group Query Result
 		List<Map<String, Object>> rateGroupList = jdbcTemplate.queryForList(
 				rateGroupSql,
 				networkId);
 
-		// Group By Tariff Package ID
+		// Group Rate Groups by Tariff Package ID
 		Map<Long, List<String>> rateGroupMap = new HashMap<>();
 
 		for (Map<String, Object> row : rateGroupList) {

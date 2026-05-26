@@ -497,19 +497,20 @@ public class TariffApprovalService {
 			/*
 			 * ── STEP 11: Approval status ─────────────────────────────────────
 			 */
-			jdbcTemplate.update("""
-					insert into CS_TARIFF_PACK_AP_REG_STATUS
-					(
-					    NETWORK_ID,
-					    TARIFF_PACKAGE_ID,
-					    TARIFF_PACKAGE_NAME,
-					    STATUS
-					)
-					values (?,?,?,?)
-					""",
-					networkId, tariffId, data.get("tariffPackageDesc"), "A");
+			// jdbcTemplate.update("""
+			// insert into CS_TARIFF_PACK_AP_REG_STATUS
+			// (
+			// NETWORK_ID,
+			// TARIFF_PACKAGE_ID,
+			// TARIFF_PACKAGE_NAME,
+			// STATUS
+			// )
+			// values (?,?,?,?)
+			// """,
+			// networkId, tariffId, data.get("tariffPackageDesc"), "A");
 
-			logger.info("executeTariffCreation complete tpName={} tariffId={}", tpName, tariffId);
+			// logger.info("executeTariffCreation complete tpName={} tariffId={}", tpName,
+			// tariffId);
 
 			Map<String, Object> response = new HashMap<>();
 			response.put("tariffPackageId", tariffId);
@@ -554,9 +555,19 @@ public class TariffApprovalService {
 
 		Map<String, Object> atp = atps.get(0);
 
-		Object rentalPeriod = "O".equals(atp.get("validity"))
-				? atp.getOrDefault("validityDays", 1)
-				: 1;
+		Object validityDaysRaw = atp.get("rentalPeriod");
+		Object rentalPeriod;
+		if ("O".equals(atp.get("validity"))
+				&& validityDaysRaw != null
+				&& !validityDaysRaw.toString().trim().isEmpty()) {
+			try {
+				rentalPeriod = Integer.parseInt(validityDaysRaw.toString().trim());
+			} catch (NumberFormatException e) {
+				rentalPeriod = 1;
+			}
+		} else {
+			rentalPeriod = 1;
+		}
 
 		jdbcTemplate.update("""
 				insert into CS_RAT_PERIODIC_CHARGE_INFO
@@ -915,6 +926,8 @@ public class TariffApprovalService {
 		atp.put("packageName", row.getServicePackageDesc());
 
 		atp.put("validity", row.getRentalType());
+
+		atp.put("rentalPeriod", row.getRentalPeriod());
 
 		atp.put("midnightExpiry", "Y".equalsIgnoreCase(row.getPlanExpMidnightYn()) ? "Yes" : "No");
 

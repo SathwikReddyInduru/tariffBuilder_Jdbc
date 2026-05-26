@@ -236,93 +236,93 @@ public class BundleService {
 				""", String.class);
 	}
 
-//    private void cloneBucket(String oldBucketId,
-//                             String newBucketId,
-//                             String tpName,
-//                             Long networkId,
-//                             Long newBucketZoneId) {
-//
-//        /*
-//         * Full bucket clone.
-//         * ZONE_GROUP_ID is replaced with newBucketZoneId.
-//         */
-//        jdbcTemplate.update(
-//                """
-//                insert into BNDL_MT_BUCKETS
-//                
-//                select
-//                    ?,
-//                    BUCKET_NAME || '_' || ?,
-//                    BALANCE_CATEGORY,
-//                    USAGE_TYPE,
-//                    VALIDITY_PERIOD_DAYS,
-//                    BUCKET_UNIT_VALUE,
-//                    BUCKET_UNIT_TYPE,
-//                    ITERATIVE_BUCKET_YN,
-//                    ITERATIVE_COUNTS,
-//                    ROLL_OVER_YN,
-//                    EXTEND_VALIDITY_YN,
-//                    BUCKET_STATUS,
-//                    STATUS_DATE,
-//                    SYSDATE,
-//                    CREATED_BY,
-//                    ?,
-//                    DURATION,
-//                    UNLIMITED_USAGE_YN,
-//                    EXPIRY_NOTIFICATION_TYPE,
-//                    EXPIRY_NOTIFICATION_THRESHOLD,
-//                    APLICABLE_FROM_HRS,
-//                    APLICABLE_TO_HRS,
-//                    LIMITED_HOURS,
-//                    BALANCE_ID,
-//                    LIMITED_NETWORKS_YN,
-//                    DATA_ZONE_GROUP_ID,
-//                    ?,
-//                    COUNTRY_ISD_PREFIX,
-//                    PRIORITY,
-//                    DEVICE_GROUP_ID,
-//                    IDD_GROUPID,
-//                    LOW_BAL_THRESHOLD1,
-//                    LOW_BAL_THRESHOLD2,
-//                    LOW_BAL_THRESHOLD3,
-//                    LOW_BAL_THRESHOLD4,
-//                    LOW_BAL_THRESHOLD5,
-//                    LOW_BAL_THRESHOLD6,
-//                    LOW_BAL_NOTIF_TYPE1,
-//                    LOW_BAL_NOTIF_TYPE2,
-//                    LOW_BAL_NOTIF_TYPE3,
-//                    LOW_BAL_NOTIF_TYPE4,
-//                    LOW_BAL_NOTIF_TYPE5,
-//                    LOW_BAL_NOTIF_TYPE6,
-//                    LOW_BAL_NOTIF_MSG1,
-//                    LOW_BAL_NOTIF_MSG2,
-//                    LOW_BAL_NOTIF_MSG3,
-//                    LOW_BAL_NOTIF_MSG4,
-//                    LOW_BAL_NOTIF_MSG5,
-//                    LOW_BAL_NOTIF_MSG6,
-//                    LOW_BAL_NOTIF_API1,
-//                    LOW_BAL_NOTIF_API2,
-//                    LOW_BAL_NOTIF_API3,
-//                    LOW_BAL_NOTIF_API4,
-//                    LOW_BAL_NOTIF_API5,
-//                    LOW_BAL_NOTIF_API6,
-//                    DAY_TYPE,
-//                    LOW_BAL_NOTIF_API_EXT1,
-//                    LOW_BAL_NOTIF_API_EXT2,
-//                    LOW_BAL_NOTIF_API_EXT3,
-//                    LOW_BAL_NOTIF_API_EXT4,
-//                    LOW_BAL_NOTIF_API_EXT5,
-//                    LOW_BAL_NOTIF_API_EXT6
-//                from BNDL_MT_BUCKETS
-//                where BUCKET_ID = ?
-//                """,
-//                newBucketId,
-//                tpName,
-//                networkId,
-//                newBucketZoneId,
-//                oldBucketId
-//        );
-//    }
+	// private void cloneBucket(String oldBucketId,
+	// String newBucketId,
+	// String tpName,
+	// Long networkId,
+	// Long newBucketZoneId) {
+	//
+	// /*
+	// * Full bucket clone.
+	// * ZONE_GROUP_ID is replaced with newBucketZoneId.
+	// */
+	// jdbcTemplate.update(
+	// """
+	// insert into BNDL_MT_BUCKETS
+	//
+	// select
+	// ?,
+	// BUCKET_NAME || '_' || ?,
+	// BALANCE_CATEGORY,
+	// USAGE_TYPE,
+	// VALIDITY_PERIOD_DAYS,
+	// BUCKET_UNIT_VALUE,
+	// BUCKET_UNIT_TYPE,
+	// ITERATIVE_BUCKET_YN,
+	// ITERATIVE_COUNTS,
+	// ROLL_OVER_YN,
+	// EXTEND_VALIDITY_YN,
+	// BUCKET_STATUS,
+	// STATUS_DATE,
+	// SYSDATE,
+	// CREATED_BY,
+	// ?,
+	// DURATION,
+	// UNLIMITED_USAGE_YN,
+	// EXPIRY_NOTIFICATION_TYPE,
+	// EXPIRY_NOTIFICATION_THRESHOLD,
+	// APLICABLE_FROM_HRS,
+	// APLICABLE_TO_HRS,
+	// LIMITED_HOURS,
+	// BALANCE_ID,
+	// LIMITED_NETWORKS_YN,
+	// DATA_ZONE_GROUP_ID,
+	// ?,
+	// COUNTRY_ISD_PREFIX,
+	// PRIORITY,
+	// DEVICE_GROUP_ID,
+	// IDD_GROUPID,
+	// LOW_BAL_THRESHOLD1,
+	// LOW_BAL_THRESHOLD2,
+	// LOW_BAL_THRESHOLD3,
+	// LOW_BAL_THRESHOLD4,
+	// LOW_BAL_THRESHOLD5,
+	// LOW_BAL_THRESHOLD6,
+	// LOW_BAL_NOTIF_TYPE1,
+	// LOW_BAL_NOTIF_TYPE2,
+	// LOW_BAL_NOTIF_TYPE3,
+	// LOW_BAL_NOTIF_TYPE4,
+	// LOW_BAL_NOTIF_TYPE5,
+	// LOW_BAL_NOTIF_TYPE6,
+	// LOW_BAL_NOTIF_MSG1,
+	// LOW_BAL_NOTIF_MSG2,
+	// LOW_BAL_NOTIF_MSG3,
+	// LOW_BAL_NOTIF_MSG4,
+	// LOW_BAL_NOTIF_MSG5,
+	// LOW_BAL_NOTIF_MSG6,
+	// LOW_BAL_NOTIF_API1,
+	// LOW_BAL_NOTIF_API2,
+	// LOW_BAL_NOTIF_API3,
+	// LOW_BAL_NOTIF_API4,
+	// LOW_BAL_NOTIF_API5,
+	// LOW_BAL_NOTIF_API6,
+	// DAY_TYPE,
+	// LOW_BAL_NOTIF_API_EXT1,
+	// LOW_BAL_NOTIF_API_EXT2,
+	// LOW_BAL_NOTIF_API_EXT3,
+	// LOW_BAL_NOTIF_API_EXT4,
+	// LOW_BAL_NOTIF_API_EXT5,
+	// LOW_BAL_NOTIF_API_EXT6
+	// from BNDL_MT_BUCKETS
+	// where BUCKET_ID = ?
+	// """,
+	// newBucketId,
+	// tpName,
+	// networkId,
+	// newBucketZoneId,
+	// oldBucketId
+	// );
+	// }
 
 	private void cloneBucket(String oldBucketId, String newBucketId, String tpName, Long networkId,
 			Long newBucketZoneId) {

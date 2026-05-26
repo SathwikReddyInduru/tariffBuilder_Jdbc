@@ -791,7 +791,7 @@ async function saveConfiguration() {
 
             validity: item.validity,
 
-            validityDays: item.validityDays || "",
+            rentalPeriod: item.validity === 'O' ? (item.rentalPeriod || 1) : "",
 
             midnightExpiry: item.midnightExpiry,
 
@@ -814,7 +814,7 @@ async function saveConfiguration() {
 
             validity: item.validity,
 
-            validityDays: item.validityDays || "",
+            rentalPeriod: item.validity === 'O' ? (item.rentalPeriod || 1) : "",
 
             midnightExpiry: item.midnightExpiry,
 
@@ -887,7 +887,9 @@ function clearBuilderSession() {
     sessionStorage.removeItem("isUpdate");
     sessionStorage.removeItem('loadedFromDraft');
     sessionStorage.removeItem('cloneMode');
-    sessionStorage.removeItem('clonePayload');
+    sessionStorage.removeItem('cloneTpName');
+    sessionStorage.removeItem('cloneNetworkId');
+    sessionStorage.removeItem('cloneUsername');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1270,7 +1272,7 @@ function loadSavedPackage(index) {
             id: a.servicePackageId,
             name: a.packageName,
             validity: a.validity,
-            validityDays: a.validityDays || "",
+            rentalPeriod: a.rentalPeriod || "",
             midnightExpiry: a.midnightExpiry,
             renewal: a.renewal,
             rental: a.rental,
@@ -1284,7 +1286,7 @@ function loadSavedPackage(index) {
             id: a.servicePackageId,
             name: a.packageName,
             validity: a.validity,
-            validityDays: a.validityDays || "",
+            rentalPeriod: a.rentalPeriod || "",
             midnightExpiry: a.midnightExpiry,
             renewal: a.renewal,
             rental: a.rental,
@@ -1821,7 +1823,21 @@ function closeClonePage() {
 
 // ── Render cards ──────────────────────────────────────────
 // ── OTT name → asset lookup ──
+// srcs[] = multiple icons for combo bundles (e.g. Netflix Prime shows both icons).
+// Combo entries MUST come before their component keywords so exact match wins.
 const _OTT_META = [
+    // ── Combo bundles (before individual keywords) ──────────────────────────
+    {
+        keywords: ['netflix prime'],
+        title: 'Netflix + Prime',
+        srcs: [
+            { src: '/images/ott/Netflix.avif', title: 'Netflix' },
+            { src: '/images/ott/Prime.svg', title: 'Prime Video' }
+        ],
+        src: '/images/ott/Netflix.avif',
+        desc: 'Netflix + Prime Video bundle'
+    },
+    // ── Individual OTT platforms ─────────────────────────────────────────────
     { keywords: ['netflix'], title: 'Netflix', src: '/images/ott/Netflix.avif', desc: 'Award-winning series | Movies | Documentaries' },
     { keywords: ['prime', 'amazon'], title: 'Prime Video', src: '/images/ott/Prime.svg', desc: 'Amazon Originals | Movies | Live Sports' },
     { keywords: ['hotstar', 'jiohotstar', 'disney'], title: 'JioHotstar', src: '/images/ott/Jiohotstar.svg', desc: 'TV Shows | Movies | Originals | Live Sports' },
@@ -1830,39 +1846,98 @@ const _OTT_META = [
     { keywords: ['mxplayer', 'mx player', 'mx'], title: 'MX Player', src: '/images/ott/MX_Player.webp', desc: 'Free Movies | Web Series | Music Videos' },
     { keywords: ['saavn', 'jiosaavn', 'jio saavn'], title: 'JioSaavn', src: '/images/ott/jiosaavn.png', desc: 'Music | Podcasts | Radio | 80M+ Songs' },
     { keywords: ['fancode', 'fan code'], title: 'FanCode', src: '/images/ott/FanCode.svg', desc: 'Live Cricket | Football | Sports Streaming' },
-    { keywords: ['facebook'], title: 'Facebook', src: null, desc: 'Social media & videos' },
-    { keywords: ['instagram'], title: 'Instagram', src: null, desc: 'Reels | Stories | Photos' },
-    { keywords: ['google'], title: 'Google', src: null, desc: 'Search | Maps | YouTube & more' },
-    { keywords: ['youtube'], title: 'YouTube', src: null, desc: 'Videos | Live | Shorts' },
-    { keywords: ['whatsapp'], title: 'WhatsApp', src: null, desc: 'Messaging | Calls | Status' },
-    { keywords: ['netflix prime'], title: 'Netflix Prime', src: '/images/ott/Netflix.avif', desc: 'Netflix | Prime bundle' },
+    // ── Social / Internet services ───────────────────────────────────────────
+    {
+        keywords: ['facebook'],
+        title: 'Facebook',
+        src: '/images/ott/facebook.png',
+        desc: 'Social media | Videos | Marketplace'
+    },
+    {
+        keywords: ['instagram'],
+        title: 'Instagram',
+        src: '/images/ott/instagram.png',
+        desc: 'Reels | Stories | Photos'
+    },
+    {
+        keywords: ['google'],
+        title: 'Google',
+        src: '/images/ott/google.png',
+        desc: 'Search | Maps | YouTube & more'
+    },
+    {
+        keywords: ['twitter', 'x.com'],
+        title: 'Twitter / X',
+        src: '/images/ott/twitter.png',
+        desc: 'News | Trends | Live conversations'
+    },
+    {
+        keywords: ['chatgpt', 'openai', 'chat gpt'],
+        title: 'ChatGPT',
+        src: '/images/ott/chat-gpt.png',
+        desc: 'AI assistant | Chat | Code | Writing'
+    },
+    {
+        keywords: ['youtube'],
+        title: 'YouTube',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/240px-YouTube_full-color_icon_%282017%29.svg.png',
+        desc: 'Videos | Live | Shorts'
+    },
+    {
+        keywords: ['whatsapp'],
+        title: 'WhatsApp',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/240px-WhatsApp.svg.png',
+        desc: 'Messaging | Calls | Status'
+    },
 ];
 _OTT_META.forEach(m => { if (!m.initial) m.initial = m.title.charAt(0); });
 
 function _ottLookup(name) {
-    const lower = (name || '').toLowerCase();
-    // Try longest keyword match first
+    const lower = (name || '').toLowerCase().trim();
+    // 1. Exact keyword match (e.g. "netflix prime" matches the combo entry exactly)
+    const exact = _OTT_META.find(m => m.keywords.some(k => k === lower));
+    if (exact) return exact;
+    // 2. Longest keyword substring match so specific beats general
     const found = _OTT_META
         .filter(m => m.keywords.some(k => lower.includes(k)))
         .sort((a, b) => Math.max(...b.keywords.map(k => k.length)) - Math.max(...a.keywords.map(k => k.length)))[0];
     if (found) return found;
-    return { title: name, src: null, desc: name, initial: name.charAt(0).toUpperCase() };
+    return { title: name, src: null, srcs: null, desc: name, initial: name.charAt(0).toUpperCase() };
 }
 
 // Build OTT icon strip: show `max` icons then '...'
+// For combo entries (srcs[]), each sub-icon counts as one slot.
 function _buildOttStripHtml(rateGroupNames, max) {
     if (!rateGroupNames || !rateGroupNames.length) return '';
-    const visible = rateGroupNames.slice(0, max);
-    const remaining = rateGroupNames.length - max;
-    let html = visible.map(name => {
+    let html = '';
+    let shown = 0;
+    for (const name of rateGroupNames) {
+        if (shown >= max) break;
         const svc = _ottLookup(name);
-        if (svc.src) {
-            return `<img class="tp-ott-icon-img" src="${svc.src}" alt="${svc.title}" title="${svc.title}"
-                    onerror="this.onerror=null;this.style.display='none';"><span class="tp-ott-fallback-badge" style="display:none" title="${svc.title}">${svc.initial}</span>`;
+        // Combo: render each sub-icon individually
+        if (svc.srcs && svc.srcs.length) {
+            for (const sub of svc.srcs) {
+                if (shown >= max) break;
+                html += `<img class="tp-ott-icon-img" src="${sub.src}" alt="${sub.title}" title="${sub.title}"
+                         onerror="this.onerror=null;this.style.display='none';">`;
+                shown++;
+            }
+        } else if (svc.src) {
+            html += `<img class="tp-ott-icon-img" src="${svc.src}" alt="${svc.title}" title="${svc.title}"
+                     onerror="this.onerror=null;this.style.display='none';">`;
+            shown++;
+        } else {
+            html += `<span class="tp-ott-fallback-badge" title="${svc.title}">${svc.initial}</span>`;
+            shown++;
         }
-        return `<span class="tp-ott-fallback-badge" title="${svc.title}">${svc.initial}</span>`;
-    }).join('');
-    if (remaining > 0) html += `<span class="tp-ott-more">...</span>`;
+    }
+    const remaining = rateGroupNames.length - rateGroupNames.slice(0, rateGroupNames.findIndex((_, i) => i >= rateGroupNames.length)).length;
+    // Count total logical slots used vs total
+    const totalSlots = rateGroupNames.reduce((acc, n) => {
+        const s = _ottLookup(n);
+        return acc + (s.srcs ? s.srcs.length : 1);
+    }, 0);
+    if (totalSlots > max) html += `<span class="tp-ott-more">+${totalSlots - max}</span>`;
     return html;
 }
 
@@ -1990,6 +2065,7 @@ function _groupPlansByDesc(plans) {
                 tariffPackageDesc: key,
                 activationFee: p.activationFee,
                 rentalType: p.rentalType,
+                rentalPeriod: p.rentalPeriod,
                 buckets: [],          // { balanceCategory, bucketUnitValue }
                 rateGroupNames: [],   // deduplicated OTT service names
                 _raw: [],             // all original rows, for modal
@@ -2111,7 +2187,10 @@ function _applyTpSearch(query) {
         card.innerHTML = `
             <div class="tp-check-badge"><span class="material-icons">check</span></div>
 
-            <div class="tp-tag">${group.rentalType || 'Individual plan'}</div>
+            <div class="tp-tag">${(group.rentalType || '').toLowerCase() === 'others'
+                ? (group.rentalPeriod != null ? group.rentalPeriod + ' Day' + (group.rentalPeriod !== 1 ? 's' : '') : 'Others')
+                : (group.rentalType || 'Individual plan')
+            }</div>
 
             <div class="tp-price-only">
                 ${priceHtml}
@@ -2223,7 +2302,7 @@ function _renderCloneTree(container, tpDesc, response) {
         const name = r.packageName || r.chargeDesc || r.chargeId || type;
         const attrs = [
             attrPill('Validity', (r.validity ? ({ 'M': 'Monthly', 'O': 'Others', 'D': 'Daily', 'W': 'Weekly', 'F': 'Fixed', 'U': 'Unlimited', 'Y': 'Yearly' }[r.validity] || r.validity) : '—')),
-            (r.validity === 'O' && r.validityDays) ? attrPill('Validity Days', r.validityDays) : '',
+            (r.validity === 'O' && r.rentalPeriod) ? attrPill('Validity Days', r.rentalPeriod) : '',
             attrPill('Mid. Expiry', r.midnightExpiry || '—'),
             attrPill('Renewal', r.renewal || '—'),
             attrPill('Rental', r.rental ?? '0'),
@@ -2357,7 +2436,7 @@ async function _cloneTreeAction(action) {
                 id: a.servicePackageId,
                 name: a.packageName,
                 validity: a.validity,
-                validityDays: a.validityDays || "",
+                rentalPeriod: a.rentalPeriod || "",
                 midnightExpiry: a.midnightExpiry,
                 renewal: a.renewal,
                 rental: a.rental,
@@ -2368,7 +2447,7 @@ async function _cloneTreeAction(action) {
                 id: a.servicePackageId,
                 name: a.packageName,
                 validity: a.validity,
-                validityDays: a.validityDays || "",
+                rentalPeriod: a.rentalPeriod || "",
                 midnightExpiry: a.midnightExpiry,
                 renewal: a.renewal,
                 rental: a.rental,
@@ -2385,18 +2464,27 @@ async function _cloneTreeAction(action) {
             isCorporate: d.isCorporateYn || false
         };
 
+        // Helper: JSON.stringify array or fallback to '[]'
+        const svcsToJson = (val) => {
+            if (Array.isArray(val)) return JSON.stringify(val);
+            if (typeof val === 'string') return val || '[]';
+            return '[]';
+        };
+
         sessionStorage.setItem('state', JSON.stringify(state));
         sessionStorage.setItem('configName', payload.tpName || d.tariffPackageDesc || '');
         sessionStorage.setItem('pkgType', d.packageType || '');
         sessionStorage.setItem('pkgSubType', d.tariffPackCategory || 'NORMAL');
-        sessionStorage.setItem('selectedSvcs_s2', d.selectedSvcs_s2 || '[]');
-        sessionStorage.setItem('selectedSvcs_s3', d.selectedSvcs_s3 || '[]');
-        sessionStorage.setItem('selectedSvcs_s4', d.selectedSvcs_s4 || '[]');
+        sessionStorage.setItem('selectedSvcs_s2', svcsToJson(d.selectedSvcs_s2));
+        sessionStorage.setItem('selectedSvcs_s3', svcsToJson(d.selectedSvcs_s3));
+        sessionStorage.setItem('selectedSvcs_s4', svcsToJson(d.selectedSvcs_s4));
 
         // Flag: step5 will show "Clone Package" instead of "Save Config"
         sessionStorage.setItem('cloneMode', 'true');
-        // Store the original full payload so Clone button in step5 can POST it
-        sessionStorage.setItem('clonePayload', JSON.stringify(payload));
+        // Store original tpName and networkId for the clone POST
+        sessionStorage.setItem('cloneTpName', payload.tpName || d.tariffPackageDesc || '');
+        sessionStorage.setItem('cloneNetworkId', String(payload.networkId || ''));
+        sessionStorage.setItem('cloneUsername', payload.username || '');
 
         closeCloneTree();
         window.isInternalNavigation = true;
@@ -2444,6 +2532,11 @@ function openTpDetails(groupData) {
             <span class="tp-modal-bucket-key">${b.balanceCategory.toLowerCase()}</span>
         </div>`).join('');
 
+    // ── Modal badge label ──────────────────────────────────
+    const badgeLabel = (group.rentalType || '').toLowerCase() === 'others'
+        ? (group.rentalPeriod != null ? group.rentalPeriod + ' Day' + (group.rentalPeriod !== 1 ? 's' : '') + ' Plan' : 'Others')
+        : (group.rentalType || 'Individual plan');
+
     // ── OTT strip (small icons beside notes) ──────────────
     const rateNames = group.rateGroupNames || [];
     const ottStripHtml = _buildOttStripHtml(rateNames, 4);
@@ -2452,24 +2545,35 @@ function openTpDetails(groupData) {
     const ottListHtml = rateNames.length
         ? rateNames.map(name => {
             const svc = _ottLookup(name);
-            const imgHtml = svc.src
-                ? `<img class="tp-modal-ott-item-img" src="${svc.src}" alt="${svc.title}" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="tp-modal-ott-fallback-badge" style="display:none">${svc.initial}</span>`
-                : `<span class="tp-modal-ott-fallback-badge">${svc.initial}</span>`;
+            // Combo entry: show stacked icons side by side
+            const imgHtml = svc.srcs && svc.srcs.length
+                ? svc.srcs.map(sub =>
+                    `<img class="tp-modal-ott-item-img" src="${sub.src}" alt="${sub.title}"
+                          style="margin-right:4px"
+                          onerror="this.onerror=null;this.style.display='none';">`
+                ).join('')
+                : svc.src
+                    ? `<img class="tp-modal-ott-item-img" src="${svc.src}" alt="${svc.title}" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="tp-modal-ott-fallback-badge" style="display:none">${svc.initial}</span>`
+                    : `<span class="tp-modal-ott-fallback-badge">${svc.initial}</span>`;
             return `
             <div class="tp-modal-ott-item">
-                ${imgHtml}
+                <div style="display:flex;align-items:center;gap:2px">${imgHtml}</div>
                 <div class="tp-modal-ott-item-info">
                     <span class="tp-modal-ott-item-name">${svc.title}</span>
                     <span class="tp-modal-ott-item-desc">${svc.desc}</span>
                 </div>
             </div>`;
         }).join('')
-        : '<div class="pd-empty-section" style="padding:16px;color:var(--text-muted,#888)">No OTT benefits included</div>';
+        : `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 16px;gap:6px;text-align:center">
+               <span class="material-icons" style="font-size:32px;color:red">tv_off</span>
+               <span style="font-size:13px;font-weight:600;color:var(--text-secondary,#777)">No OTT benefits included</span>
+               <span style="font-size:11.5px;color:var(--text-muted,#aaa)">This plan does not include any streaming services</span>
+           </div>`;
 
     content.innerHTML = `
         <div class="tp-modal-title">${group.tariffPackageDesc || 'Pack Details'}</div>
 
-        <div class="tp-modal-badge">${group.rentalType || 'Individual plan'}</div>
+        <div class="tp-modal-badge">${badgeLabel}</div>
 
         <div class="tp-modal-hero">
             <div class="tp-modal-price-block">
@@ -2481,10 +2585,10 @@ function openTpDetails(groupData) {
             </div>
         </div>
 
-        <div class="tp-modal-ott-row">
+        ${rateNames.length ? `<div class="tp-modal-ott-row">
             <div class="tp-modal-ott-icons">${ottStripHtml}</div>
             <ul class="tp-modal-ott-notes">${notesHtml}</ul>
-        </div>
+        </div>` : `<ul class="tp-modal-ott-notes" style="margin:12px 0 4px 0">${notesHtml}</ul>`}
 
         <div class="tp-modal-benefits-title">additional benefits</div>
 

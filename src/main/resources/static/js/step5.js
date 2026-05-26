@@ -40,7 +40,7 @@ function onCorporateChange(checked) {
     saveState(state);
 }
 
-// ── Clone Package — called from the Clone Package button in step5 ──
+// ── Clone Package — builds payload entirely from sessionStorage ──
 async function clonePackageFromBuilder() {
     const state = getState();
 
@@ -61,18 +61,12 @@ async function clonePackageFromBuilder() {
         return;
     }
 
-    // Retrieve the original payload stored when Modify was clicked
-    const rawPayload = sessionStorage.getItem('clonePayload');
-    if (!rawPayload) {
-        alert('Clone payload missing. Please go back to the Clone page and try again.');
-        return;
-    }
+    const originalTpName = sessionStorage.getItem('cloneTpName');
+    const networkId = sessionStorage.getItem('cloneNetworkId');
+    const username = sessionStorage.getItem('cloneUsername');
 
-    let payload;
-    try {
-        payload = JSON.parse(rawPayload);
-    } catch (e) {
-        alert('Invalid clone payload. Please try again.');
+    if (!originalTpName || !networkId) {
+        alert('Clone context missing. Please go back to the Clone page and try again.');
         return;
     }
 
@@ -82,42 +76,51 @@ async function clonePackageFromBuilder() {
         return `${month}/${day}/${year}`;
     }
 
-    const chargeId = (payload.tpName || payload.data?.tariffPackageDesc || '') + '_PR';
+    const chargeId = originalTpName + '_PR';
 
-    // Merge builder's current step5 values into the payload's data block
-    payload.data = {
-        ...payload.data,
-        charge: state.price,
-        endDate: formatDateToMMDDYYYY(state.endDate),
-        publicityId: state.publicityCode,
-        isCorporateYn: state.isCorporate || false,
-        chargeId: chargeId,
-        packageType: sessionStorage.getItem('pkgType') || payload.data?.packageType,
-        tariffPackCategory: sessionStorage.getItem('pkgSubType') || payload.data?.tariffPackCategory || 'NORMAL',
-        tariffPlanId: Number(state.s2[0].id),
-        tariffPlanName: state.s2[0].name,
-        defaultAtps: (state.s3 || []).map(item => ({
-            servicePackageId: Number(item.id),
+    const payload = {
+        tpName: originalTpName,
+        networkId: Number(networkId),
+        username: username || USERNAME,
+        data: {
+            tariffPackageDesc: originalTpName,
+            packageType: sessionStorage.getItem('pkgType') || '',
+            tariffPackCategory: sessionStorage.getItem('pkgSubType') || 'NORMAL',
+            charge: state.price,
+            endDate: formatDateToMMDDYYYY(state.endDate),
+            publicityId: state.publicityCode,
             chargeId: chargeId,
-            packageName: item.name,
-            validity: item.validity,
-            midnightExpiry: item.midnightExpiry,
-            renewal: item.renewal,
-            rental: item.rental || 0,
-            maxCount: item.maxCount || 0,
-            freeCycles: item.freeCycles || 0
-        })),
-        allowedAtps: (state.s4 || []).map(item => ({
-            servicePackageId: Number(item.id),
-            chargeId: chargeId,
-            packageName: item.name,
-            validity: item.validity,
-            midnightExpiry: item.midnightExpiry,
-            renewal: item.renewal,
-            rental: item.rental || 0,
-            maxCount: item.maxCount || 0,
-            freeCycles: item.freeCycles || 0
-        }))
+            isCorporateYn: state.isCorporate || false,
+            tariffPlanId: Number(state.s2[0].id),
+            tariffPlanName: state.s2[0].name,
+            selectedSvcs_s2: sessionStorage.getItem('selectedSvcs_s2') || '[]',
+            selectedSvcs_s3: sessionStorage.getItem('selectedSvcs_s3') || '[]',
+            selectedSvcs_s4: sessionStorage.getItem('selectedSvcs_s4') || '[]',
+            defaultAtps: (state.s3 || []).map(item => ({
+                servicePackageId: Number(item.id),
+                chargeId: chargeId,
+                packageName: item.name,
+                validity: item.validity,
+                rentalPeriod: item.validity === 'O' ? (item.rentalPeriod || 1) : "",
+                midnightExpiry: item.midnightExpiry,
+                renewal: item.renewal,
+                rental: item.rental || 0,
+                maxCount: item.maxCount || 0,
+                freeCycles: item.freeCycles || 0
+            })),
+            allowedAtps: (state.s4 || []).map(item => ({
+                servicePackageId: Number(item.id),
+                chargeId: chargeId,
+                packageName: item.name,
+                validity: item.validity,
+                rentalPeriod: item.validity === 'O' ? (item.rentalPeriod || 1) : "",
+                midnightExpiry: item.midnightExpiry,
+                renewal: item.renewal,
+                rental: item.rental || 0,
+                maxCount: item.maxCount || 0,
+                freeCycles: item.freeCycles || 0
+            }))
+        }
     };
 
     const cloneBtn = document.getElementById('clonePackageBtn');
@@ -141,7 +144,9 @@ async function clonePackageFromBuilder() {
 
         // Clean up clone-specific session keys
         sessionStorage.removeItem('cloneMode');
-        sessionStorage.removeItem('clonePayload');
+        sessionStorage.removeItem('cloneTpName');
+        sessionStorage.removeItem('cloneNetworkId');
+        sessionStorage.removeItem('cloneUsername');
         clearBuilderSession();
 
         window.isInternalNavigation = true;

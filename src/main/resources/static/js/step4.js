@@ -129,17 +129,17 @@ function refreshSidebar() {
             }
 
             list.innerHTML = data.map(plan => `
-				 
-				                <div class="draggable-item"
+			 
+			                <div class="draggable-item"
 
-				                    data-network-id="${plan.networkId}"
-				                    data-package-id="${plan.servicePackageId}"
-				                    onclick="addToCenter('${plan.servicePackageId}','${plan.servicePackageName}','${plan.networkId}')">
-				                    ${plan.servicePackageName}
-									
-								</div>
+			                    data-network-id="${plan.networkId}"
+			                    data-package-id="${plan.servicePackageId}"
+			                    onclick="addToCenter('${plan.servicePackageId}','${plan.servicePackageName}','${plan.networkId}')">
+			                    ${plan.servicePackageName}
+							
+							</div>
 
-				            `).join('');
+			            `).join('');
         })
         .catch(err => {
             console.error(err);
@@ -167,7 +167,7 @@ function addToCenter(id, name) {
         id: String(id),
         name: name,
         validity: "M",
-        validityDays: "",
+        rentalPeriod: "",
         renewal: "No",
         midnightExpiry: "No",
         rental: "",
@@ -211,12 +211,12 @@ function renderCard(item) {
                 <option value="O"  ${item.validity === 'O' ? 'selected' : ''}>Others</option>
             </select>
         </div>
-        <div class="card-field" id="validity-days-${item.id}" style="display:${item.validity === 'O' ? 'block' : 'none'};">
+        <div class="card-field" id="rental-period-${item.id}" style="display:${item.validity === 'O' ? 'block' : 'none'};">
             <label>NO. OF DAYS</label>
             <input type="number" min="1"
-                value="${item.validityDays || ''}"
+                value="${item.rentalPeriod || ''}"
                 placeholder="Enter days"
-                oninput="updateField('${item.id}', 'validityDays', this.value)">
+                oninput="updateField('${item.id}', 'rentalPeriod', this.value)">
         </div>
  
         <div class="card-field">
@@ -280,11 +280,11 @@ function handleValidityChange(id, value) {
 
     updateField(id, 'validity', value);
 
-    const daysField = document.getElementById(`validity-days-${id}`);
+    const daysField = document.getElementById(`rental-period-${id}`);
     if (daysField) daysField.style.display = value === 'O' ? 'block' : 'none';
 
-    // Clear days value when switching away from Others
-    if (value !== 'O') updateField(id, 'validityDays', '');
+    // Clear rentalPeriod when switching away from Others
+    if (value !== 'O') updateField(id, 'rentalPeriod', '');
 }
 
 // ---------- RENEWAL ----------

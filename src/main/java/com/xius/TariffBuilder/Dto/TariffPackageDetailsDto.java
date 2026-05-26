@@ -15,6 +15,8 @@ public class TariffPackageDetailsDto {
 
 	private String rentalType;
 
+	private Long rentalPeriod;
+
 	private String balanceCategory;
 
 	private String bucketUnitValue;
