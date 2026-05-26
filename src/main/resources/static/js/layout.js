@@ -1046,6 +1046,7 @@ function loadHierarchy(tpName) {
                     <div class="comp-name">${item.packageName}</div>
                     <div class="comp-details">
                         <span class="pill"><strong>Validity:</strong> ${validityLabel(item.validity)}</span>
+                        ${item.validity === 'O' && item.validityDays ? `<span class="pill"><strong>Validity Days:</strong> ${item.validityDays}</span>` : ''}
                         <span class="pill"><strong>Midnight Expiry:</strong> ${item.midnightExpiry || '—'}</span>
                         <span class="pill"><strong>Renewal:</strong> ${item.renewal || '—'}</span>
                         <span class="pill"><strong>Rental:</strong> ${item.rental || '0'}</span>
@@ -1065,6 +1066,7 @@ function loadHierarchy(tpName) {
                     <div class="comp-name">${item.packageName}</div>
                     <div class="comp-details">
                         <span class="pill"><strong>Validity:</strong> ${validityLabel(item.validity)}</span>
+                        ${item.validity === 'O' && item.validityDays ? `<span class="pill"><strong>Validity Days:</strong> ${item.validityDays}</span>` : ''}
                         <span class="pill"><strong>Midnight Expiry:</strong> ${item.midnightExpiry || '—'}</span>
                         <span class="pill"><strong>Renewal:</strong> ${item.renewal || '—'}</span>
                         <span class="pill"><strong>Rental:</strong> ${item.rental || '0'}</span>
@@ -1252,7 +1254,6 @@ function loadSavedPackage(index) {
     const d =
         config.data;
 
-
     /*
        convert saved format → builder state
     */
@@ -1311,7 +1312,6 @@ function loadSavedPackage(index) {
         isCorporate: d.isCorporateYn
     };
 
-
     /*
        SAME keys as draft loader
     */
@@ -1335,7 +1335,6 @@ function loadSavedPackage(index) {
         "pkgSubType",
         d.tariffPackCategory
     );
-
 
     /*
        IMPORTANT for sidebar selections
@@ -1821,6 +1820,52 @@ function closeClonePage() {
 }
 
 // ── Render cards ──────────────────────────────────────────
+// ── OTT name → asset lookup ──
+const _OTT_META = [
+    { keywords: ['netflix'], title: 'Netflix', src: '/images/ott/Netflix.avif', desc: 'Award-winning series | Movies | Documentaries' },
+    { keywords: ['prime', 'amazon'], title: 'Prime Video', src: '/images/ott/Prime.svg', desc: 'Amazon Originals | Movies | Live Sports' },
+    { keywords: ['hotstar', 'jiohotstar', 'disney'], title: 'JioHotstar', src: '/images/ott/Jiohotstar.svg', desc: 'TV Shows | Movies | Originals | Live Sports' },
+    { keywords: ['zee5', 'zee'], title: 'ZEE5', src: '/images/ott/Zee5.svg', desc: 'Web Series | Movies | Originals in 18 languages' },
+    { keywords: ['sony', 'sonyliv'], title: 'SonyLIV', src: '/images/ott/SonyLiv.svg', desc: 'Popular TV Shows | New Series | Movies' },
+    { keywords: ['mxplayer', 'mx player', 'mx'], title: 'MX Player', src: '/images/ott/MX_Player.webp', desc: 'Free Movies | Web Series | Music Videos' },
+    { keywords: ['saavn', 'jiosaavn', 'jio saavn'], title: 'JioSaavn', src: '/images/ott/jiosaavn.png', desc: 'Music | Podcasts | Radio | 80M+ Songs' },
+    { keywords: ['fancode', 'fan code'], title: 'FanCode', src: '/images/ott/FanCode.svg', desc: 'Live Cricket | Football | Sports Streaming' },
+    { keywords: ['facebook'], title: 'Facebook', src: null, desc: 'Social media & videos' },
+    { keywords: ['instagram'], title: 'Instagram', src: null, desc: 'Reels | Stories | Photos' },
+    { keywords: ['google'], title: 'Google', src: null, desc: 'Search | Maps | YouTube & more' },
+    { keywords: ['youtube'], title: 'YouTube', src: null, desc: 'Videos | Live | Shorts' },
+    { keywords: ['whatsapp'], title: 'WhatsApp', src: null, desc: 'Messaging | Calls | Status' },
+    { keywords: ['netflix prime'], title: 'Netflix Prime', src: '/images/ott/Netflix.avif', desc: 'Netflix | Prime bundle' },
+];
+_OTT_META.forEach(m => { if (!m.initial) m.initial = m.title.charAt(0); });
+
+function _ottLookup(name) {
+    const lower = (name || '').toLowerCase();
+    // Try longest keyword match first
+    const found = _OTT_META
+        .filter(m => m.keywords.some(k => lower.includes(k)))
+        .sort((a, b) => Math.max(...b.keywords.map(k => k.length)) - Math.max(...a.keywords.map(k => k.length)))[0];
+    if (found) return found;
+    return { title: name, src: null, desc: name, initial: name.charAt(0).toUpperCase() };
+}
+
+// Build OTT icon strip: show `max` icons then '...'
+function _buildOttStripHtml(rateGroupNames, max) {
+    if (!rateGroupNames || !rateGroupNames.length) return '';
+    const visible = rateGroupNames.slice(0, max);
+    const remaining = rateGroupNames.length - max;
+    let html = visible.map(name => {
+        const svc = _ottLookup(name);
+        if (svc.src) {
+            return `<img class="tp-ott-icon-img" src="${svc.src}" alt="${svc.title}" title="${svc.title}"
+                    onerror="this.onerror=null;this.style.display='none';"><span class="tp-ott-fallback-badge" style="display:none" title="${svc.title}">${svc.initial}</span>`;
+        }
+        return `<span class="tp-ott-fallback-badge" title="${svc.title}">${svc.initial}</span>`;
+    }).join('');
+    if (remaining > 0) html += `<span class="tp-ott-more">...</span>`;
+    return html;
+}
+
 async function _loadAndRenderTpCards() {
     const grid = document.getElementById('clonePlanGrid');
     const countBadge = document.getElementById('clonePlanCount');
@@ -1946,6 +1991,7 @@ function _groupPlansByDesc(plans) {
                 activationFee: p.activationFee,
                 rentalType: p.rentalType,
                 buckets: [],          // { balanceCategory, bucketUnitValue }
+                rateGroupNames: [],   // deduplicated OTT service names
                 _raw: [],             // all original rows, for modal
             });
         }
@@ -1955,6 +2001,12 @@ function _groupPlansByDesc(plans) {
             group.activationFee = p.activationFee;
         }
         group.buckets.push({ balanceCategory: p.balanceCategory, bucketUnitValue: p.bucketUnitValue });
+        // Merge rateGroupNames, deduplicating across rows of the same group
+        if (Array.isArray(p.rateGroupNames)) {
+            p.rateGroupNames.forEach(function (name) {
+                if (name && !group.rateGroupNames.includes(name)) group.rateGroupNames.push(name);
+            });
+        }
         group._raw.push(p);
     });
 
@@ -2024,13 +2076,8 @@ function _applyTpSearch(query) {
         return;
     }
 
-    // OTT icons strip — show first 5 + overflow badge
-    const _OTT_CARD_MAX = 5;
-    const visibleOtts = _OTT_ICONS.slice(0, _OTT_CARD_MAX);
-    const extraCount = _OTT_ICONS.length - _OTT_CARD_MAX;
-    const ottHtml = visibleOtts.map(o =>
-        `<img class="tp-ott-icon-img" src="${o.src}" alt="${o.title}" title="${o.title}" onerror="this.style.display='none'">`
-    ).join('') + (extraCount > 0 ? `<span class="tp-ott-more">+${extraCount}</span>` : '');
+    // OTT icons strip — built per-card from group.rateGroupNames
+    // (the static strip is computed inside the forEach below)
 
     groups.forEach((group, i) => {
         const planId = 'tp-grp-' + encodeURIComponent(group.tariffPackageDesc);
@@ -2074,7 +2121,7 @@ function _applyTpSearch(query) {
                 ${bucketsHtml}
             </div>
 
-            <div class="tp-ott-strip">${ottHtml}</div>
+            <div class="tp-ott-strip">${_buildOttStripHtml(group.rateGroupNames, 2)}</div>
 
             <div class="tp-card-actions">
                 <button
@@ -2176,6 +2223,7 @@ function _renderCloneTree(container, tpDesc, response) {
         const name = r.packageName || r.chargeDesc || r.chargeId || type;
         const attrs = [
             attrPill('Validity', (r.validity ? ({ 'M': 'Monthly', 'O': 'Others', 'D': 'Daily', 'W': 'Weekly', 'F': 'Fixed', 'U': 'Unlimited', 'Y': 'Yearly' }[r.validity] || r.validity) : '—')),
+            (r.validity === 'O' && r.validityDays) ? attrPill('Validity Days', r.validityDays) : '',
             attrPill('Mid. Expiry', r.midnightExpiry || '—'),
             attrPill('Renewal', r.renewal || '—'),
             attrPill('Rental', r.rental ?? '0'),
@@ -2397,23 +2445,26 @@ function openTpDetails(groupData) {
         </div>`).join('');
 
     // ── OTT strip (small icons beside notes) ──────────────
-    const ottStripHtml = _OTT_SERVICES.slice(0, 4).map(o =>
-        `<img class="tp-modal-ott-img" src="${o.src}"
-              alt="${o.title}"
-              onerror="this.src='${o.fallback}'">`
-    ).join('');
+    const rateNames = group.rateGroupNames || [];
+    const ottStripHtml = _buildOttStripHtml(rateNames, 4);
 
     // ── Full OTT benefit list ──────────────────────────────
-    const ottListHtml = _OTT_SERVICES.map(o => `
-        <div class="tp-modal-ott-item">
-            <img class="tp-modal-ott-item-img" src="${o.src}"
-                 alt="${o.title}"
-                 onerror="this.src='${o.fallback}'">
-            <div class="tp-modal-ott-item-info">
-                <span class="tp-modal-ott-item-name">${o.title}</span>
-                <span class="tp-modal-ott-item-desc">${o.desc}</span>
-            </div>
-        </div>`).join('');
+    const ottListHtml = rateNames.length
+        ? rateNames.map(name => {
+            const svc = _ottLookup(name);
+            const imgHtml = svc.src
+                ? `<img class="tp-modal-ott-item-img" src="${svc.src}" alt="${svc.title}" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="tp-modal-ott-fallback-badge" style="display:none">${svc.initial}</span>`
+                : `<span class="tp-modal-ott-fallback-badge">${svc.initial}</span>`;
+            return `
+            <div class="tp-modal-ott-item">
+                ${imgHtml}
+                <div class="tp-modal-ott-item-info">
+                    <span class="tp-modal-ott-item-name">${svc.title}</span>
+                    <span class="tp-modal-ott-item-desc">${svc.desc}</span>
+                </div>
+            </div>`;
+        }).join('')
+        : '<div class="pd-empty-section" style="padding:16px;color:var(--text-muted,#888)">No OTT benefits included</div>';
 
     content.innerHTML = `
         <div class="tp-modal-title">${group.tariffPackageDesc || 'Pack Details'}</div>
@@ -2444,11 +2495,12 @@ function openTpDetails(groupData) {
             <div class="tp-modal-your-benefits">
                 <div class="tp-modal-your-benefits-title">your benefits</div>
                 <p class="tp-modal-your-benefits-text">
-                    Get JioHotstar Mobile + 7 more OTTs including ZEE5,
-                    SonyLIV, FanCode, Lionsgate Play &amp; more. Add-on
-                    ${hasData ? buckets.find(b => b.balanceCategory === 'DATA').bucketUnitValue + ' Data.' : 'No extra data.'}
-                    ${!hasSms ? 'No service validity.' : ''}
-                    Pack validity 28 days.
+                    ${rateNames.length > 0
+            ? 'Includes ' + rateNames.slice(0, 3).join(', ') + (rateNames.length > 3 ? ' &amp; ' + (rateNames.length - 3) + ' more OTT' + (rateNames.length - 3 > 1 ? 's' : '') + '.' : '.')
+            : 'No OTT benefits included.'}
+                    ${hasData ? buckets.find(b => b.balanceCategory === 'DATA').bucketUnitValue + ' Data.' : 'No Data included.'}
+                    ${!hasVoice ? 'No Voice calls.' : ''}
+                    ${!hasSms ? 'No SMS included.' : ''}
                 </p>
             </div>
         </div>

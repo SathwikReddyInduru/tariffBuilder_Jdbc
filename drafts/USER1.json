@@ -1,35 +1,45 @@
 [ {
   "name" : "Untitled Draft",
   "pkgType" : "POSTPAID",
+  "pkgSubType" : null,
+  "savedOn" : "26 May 2026",
+  "savedTime" : "13:17",
+  "username" : "USER1",
+  "selectedSvcs_s2" : null,
+  "selectedSvcs_s3" : null,
+  "selectedSvcs_s4" : null,
+  "state" : { }
+}, {
+  "name" : "testing",
+  "pkgType" : "POSTPAID",
   "pkgSubType" : "COMMERCIAL",
   "savedOn" : "25 May 2026",
-  "savedTime" : "20:05",
+  "savedTime" : "20:13",
   "username" : "USER1",
   "selectedSvcs_s2" : "[\"VOICE\"]",
   "selectedSvcs_s3" : "[\"SMS\"]",
-  "selectedSvcs_s4" : null,
+  "selectedSvcs_s4" : "[]",
   "state" : {
     "s2" : [ {
-      "id" : "1743",
-      "name" : "MI MUNDO S_V",
-      "networkId" : "16"
+      "id" : 1743,
+      "name" : "MI MUNDO S_V"
     } ],
     "s3" : [ {
-      "id" : "1968",
+      "id" : 1968,
       "name" : "MI MUNDO_T1",
-      "validity" : "M",
-      "validityDays" : "",
-      "renewal" : "No",
+      "validity" : "O",
+      "validityDays" : "20",
       "midnightExpiry" : "No",
-      "rental" : "",
-      "maxCount" : "",
+      "renewal" : "Yes",
+      "rental" : "1",
+      "maxCount" : "1",
       "freeCycles" : "0"
     } ],
     "s4" : [ ],
-    "price" : "",
-    "publicityCode" : "",
-    "endDate" : "",
-    "isCorporate" : false
+    "price" : "199",
+    "publicityCode" : "pub143",
+    "endDate" : "2026-05-31",
+    "isCorporate" : true
   }
 }, {
   "name" : "Test_today",
