@@ -1,0 +1,57 @@
+[ {
+  "name" : "Untitled Draft",
+  "pkgType" : "POSTPAID",
+  "pkgSubType" : "COMMERCIAL",
+  "savedOn" : "04 Jun 2026",
+  "savedTime" : "18:48",
+  "username" : "XIUSUSER1",
+  "selectedSvcs_s2" : "[\"DATA\"]",
+  "selectedSvcs_s3" : "[\"SMS\",\"DATA\"]",
+  "selectedSvcs_s4" : "[\"DATA\"]",
+  "state" : {
+    "s2" : [ {
+      "id" : "103303",
+      "name" : "DATA",
+      "networkId" : "196"
+    } ],
+    "s3" : [ {
+      "id" : "103314",
+      "name" : "SMS",
+      "validity" : "M",
+      "rentalPeriod" : "",
+      "renewal" : "Yes",
+      "midnightExpiry" : "No",
+      "rental" : "",
+      "maxCount" : "",
+      "freeCycles" : "0",
+      "priority" : "1"
+    }, {
+      "id" : "103319",
+      "name" : "SD_PLAN",
+      "validity" : "M",
+      "rentalPeriod" : "",
+      "renewal" : "Yes",
+      "midnightExpiry" : "No",
+      "rental" : "",
+      "maxCount" : "",
+      "freeCycles" : "0",
+      "priority" : "1"
+    } ],
+    "s4" : [ {
+      "id" : "103316",
+      "name" : "D_PLAN",
+      "validity" : "M",
+      "rentalPeriod" : "",
+      "renewal" : "Yes",
+      "midnightExpiry" : "No",
+      "rental" : "",
+      "maxCount" : "",
+      "freeCycles" : "0",
+      "priority" : "1"
+    } ],
+    "price" : "",
+    "publicityCode" : "",
+    "endDate" : "",
+    "isCorporate" : false
+  }
+} ]

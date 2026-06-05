@@ -1,1 +1,51 @@
-{ }
+{
+  "testttt" : {
+    "tpName" : "testttt",
+    "username" : "XIUSUSER1",
+    "networkId" : 196,
+    "data" : {
+      "username" : "XIUSUSER1",
+      "isUpdate" : false,
+      "submittedOn" : "04 Jun 2026",
+      "packageType" : "POSTPAID",
+      "tariffPackCategory" : "NORMAL",
+      "tariffPackageDesc" : "testttt",
+      "charge" : "499",
+      "endDate" : "06/11/2026",
+      "publicityId" : "p",
+      "chargeId" : "testttt_PR",
+      "isCorporateYn" : false,
+      "tariffPlanId" : 103306,
+      "tariffPlanName" : "VOICE_PLAN",
+      "selectedSvcs_s2" : "[\"VOICE\"]",
+      "selectedSvcs_s3" : "[\"VOICE\"]",
+      "selectedSvcs_s4" : "[\"VOICE\",\"DATA\"]",
+      "defaultAtps" : [ {
+        "servicePackageId" : 103315,
+        "chargeId" : "testttt_PR",
+        "packageName" : "VOICE",
+        "validity" : "M",
+        "rentalPeriod" : "",
+        "midnightExpiry" : "No",
+        "renewal" : "No",
+        "rental" : 0,
+        "maxCount" : 0,
+        "freeCycles" : "0",
+        "priority" : "3"
+      } ],
+      "allowedAtps" : [ {
+        "servicePackageId" : 103318,
+        "chargeId" : "testttt_PR",
+        "packageName" : "VD_PLAN",
+        "validity" : "M",
+        "rentalPeriod" : "",
+        "midnightExpiry" : "No",
+        "renewal" : "No",
+        "rental" : 0,
+        "maxCount" : 0,
+        "freeCycles" : "0",
+        "priority" : "4"
+      } ]
+    }
+  }
+}

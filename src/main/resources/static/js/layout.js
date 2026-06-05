@@ -279,9 +279,9 @@ function applyPrivilege() {
         approverNode.style.display = "none";
     }
 
-    // if (!hasClone && cloneNode) {
-    //     cloneNode.style.display = "none";
-    // }
+    if (!hasClone && cloneNode) {
+        cloneNode.style.display = "none";
+    }
 }
 
 /*async function checkDraftsOnLogin() {
@@ -343,12 +343,17 @@ function restoreActiveModule() {
     }
 
     // FIRST LOAD DECISION
+    const hasClone = PRIVILEGE_IDS.includes("P26127");
+
     if (!hasBuilder && hasApprover) {
         window.isInternalNavigation = true;
         window.location.href = "/builder/admin";
     } else if (hasBuilder) {
         window.isInternalNavigation = true;
         window.location.href = "/builder/step1";
+    } else if (!hasBuilder && !hasApprover && hasClone) {
+        // Clone-only user: land directly on the Clone TP's page
+        openClone();
     }
 }
 
@@ -801,7 +806,9 @@ async function saveConfiguration() {
 
             maxCount: item.maxCount || 0,
 
-            freeCycles: item.freeCycles || 0
+            freeCycles: item.freeCycles || 0,
+		   
+			 priority:item.priority
         })),
 
         allowedAtps: (state.s4 || []).map(item => ({
@@ -824,7 +831,9 @@ async function saveConfiguration() {
 
             maxCount: item.maxCount || 0,
 
-            freeCycles: item.freeCycles || 0
+            freeCycles: item.freeCycles || 0,
+			
+			priority:item.priority
         }))
     };
 
@@ -889,7 +898,6 @@ function clearBuilderSession() {
     sessionStorage.removeItem('cloneMode');
     sessionStorage.removeItem('cloneTpName');
     sessionStorage.removeItem('cloneNetworkId');
-    sessionStorage.removeItem('cloneUsername');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1054,6 +1062,7 @@ function loadHierarchy(tpName) {
                         <span class="pill"><strong>Rental:</strong> ${item.rental || '0'}</span>
                         <span class="pill"><strong>Max Count:</strong> ${item.maxCount || '0'}</span>
                         <span class="pill"><strong>Free Cycles:</strong> ${item.freeCycles || '0'}</span>
+						<span class="pill"><strong>Prority:</strong> ${item.priority}</span>
                     </div>
                 </div>
             `).join('');
@@ -1074,6 +1083,7 @@ function loadHierarchy(tpName) {
                         <span class="pill"><strong>Rental:</strong> ${item.rental || '0'}</span>
                         <span class="pill"><strong>Max Count:</strong> ${item.maxCount || '0'}</span>
                         <span class="pill"><strong>Free Cycles:</strong> ${item.freeCycles || '0'}</span>
+						<span class="pill"><strong>Prority:</strong> ${item.priority || '0'}</span>
                     </div>
                 </div>
             `).join('');
@@ -1277,7 +1287,8 @@ function loadSavedPackage(index) {
             renewal: a.renewal,
             rental: a.rental,
             maxCount: a.maxCount,
-            freeCycles: a.freeCycles
+            freeCycles: a.freeCycles,
+			priority:a.priority
 
         })),
 
@@ -1291,7 +1302,8 @@ function loadSavedPackage(index) {
             renewal: a.renewal,
             rental: a.rental,
             maxCount: a.maxCount,
-            freeCycles: a.freeCycles
+            freeCycles: a.freeCycles,
+			priority:a.priority
 
         })),
 
@@ -1572,117 +1584,6 @@ function goNext() {
    No overlay, no backdrop — replaces workspace content like admin mode
 ════════════════════════════════════════════════════════════ */
 
-// ── Mock data (swap fetch() in when API is ready) ─────────
-const TP_PLANS_MOCK = [
-    {
-        id: 'tp-001',
-        tag: 'Individual plan',
-        price: '449',
-        currency: '₹',
-        period: '/m+GST',
-        data: 'unlimited',
-        dataLabel: '4G & 5G DATA',
-        calls: 'unlimited',
-        callsLabel: 'CALLS',
-        otts: [
-            { label: '⚡', bg: '#e63946' },
-            { label: 'G1', bg: '#4285f4' },
-            { label: 'LS', bg: '#6c47ff' },
-            { label: 'HP', bg: '#00b37e' },
-        ],
-        ottExtra: 4,
-    },
-    {
-        id: 'tp-002',
-        tag: 'Individual plan',
-        price: '549',
-        currency: '₹',
-        period: '/m+GST',
-        data: 'unlimited',
-        dataLabel: '4G & 5G DATA',
-        calls: 'unlimited',
-        callsLabel: 'CALLS',
-        otts: [
-            { label: '⚡', bg: '#e63946' },
-            { label: 'PV', bg: '#00a8e1' },
-            { label: 'G1', bg: '#4285f4' },
-            { label: 'LS', bg: '#6c47ff' },
-        ],
-        ottExtra: 5,
-    },
-    {
-        id: 'tp-003',
-        tag: '1 regular + 1 free add-on SIMs',
-        price: '699',
-        currency: '₹',
-        period: '/m+GST',
-        data: 'unlimited',
-        dataLabel: '4G & 5G DATA',
-        calls: 'unlimited',
-        callsLabel: 'CALLS',
-        otts: [
-            { label: '⚡', bg: '#e63946' },
-            { label: 'PV', bg: '#00a8e1' },
-            { label: 'G1', bg: '#4285f4' },
-            { label: 'LS', bg: '#6c47ff' },
-        ],
-        ottExtra: 5,
-    },
-    {
-        id: 'tp-004',
-        tag: '1 regular + 2 free add-on SIMs',
-        price: '999',
-        currency: '₹',
-        period: '/m+GST',
-        data: 'unlimited',
-        dataLabel: '4G & 5G DATA',
-        calls: 'unlimited',
-        callsLabel: 'CALLS',
-        otts: [
-            { label: '⚡', bg: '#e63946' },
-            { label: 'PV', bg: '#00a8e1' },
-            { label: 'G1', bg: '#4285f4' },
-            { label: 'TV', bg: '#111111' },
-        ],
-        ottExtra: 7,
-    },
-    {
-        id: 'tp-005',
-        tag: '1 regular + 3 free add-on SIMs',
-        price: '1199',
-        currency: '₹',
-        period: '/m+GST',
-        data: 'unlimited',
-        dataLabel: '4G & 5G DATA',
-        calls: 'unlimited',
-        callsLabel: 'CALLS',
-        otts: [
-            { label: '⚡', bg: '#e63946' },
-            { label: 'PV', bg: '#00a8e1' },
-            { label: 'G1', bg: '#4285f4' },
-            { label: 'TV', bg: '#111111' },
-        ],
-        ottExtra: 7,
-    },
-    {
-        id: 'tp-006',
-        tag: '1 regular + 3 free add-on SIMs',
-        price: '1399',
-        currency: '₹',
-        period: '/m+GST',
-        data: 'unlimited',
-        dataLabel: '4G & 5G DATA',
-        calls: 'unlimited',
-        callsLabel: 'CALLS',
-        otts: [
-            { label: '⚡', bg: '#e63946' },
-            { label: 'N', bg: '#e50914' },
-            { label: 'PV', bg: '#00a8e1' },
-            { label: 'G1', bg: '#4285f4' },
-        ],
-        ottExtra: 8,
-    },
-];
 
 // ── Filter state ──────────────────────────────────────────
 const _tpFilter = { category: null, validity: null, price: null };
@@ -2056,43 +1957,44 @@ const _CAT_ICON = {
 };
 
 // ── Group flat plan array by tariffPackageDesc ────────────
+// New query returns one row per tariffPackageId with separate dataBenefit /
+// smsBenefit / voiceBenefit columns, so grouping is now a simple normalisation
+// pass that builds the same {buckets, rateGroupNames, _raw} shape the rest of
+// the rendering code expects.
 function _groupPlansByDesc(plans) {
     const map = new Map();
     plans.forEach(p => {
         const key = p.tariffPackageDesc || '';
         if (!map.has(key)) {
+            // Build ordered buckets from the three flat benefit columns
+            const buckets = [];
+            if (p.voiceBenefit) buckets.push({ balanceCategory: 'VOICE', bucketUnitValue: p.voiceBenefit });
+            if (p.smsBenefit)   buckets.push({ balanceCategory: 'SMS',   bucketUnitValue: p.smsBenefit });
+            if (p.dataBenefit)  buckets.push({ balanceCategory: 'DATA',  bucketUnitValue: p.dataBenefit });
+
             map.set(key, {
                 tariffPackageDesc: key,
+                tariff_package_id: p.tariff_package_id,
                 activationFee: p.activationFee,
                 rentalType: p.rentalType,
                 rentalPeriod: p.rentalPeriod,
-                buckets: [],          // { balanceCategory, bucketUnitValue }
-                rateGroupNames: [],   // deduplicated OTT service names
-                _raw: [],             // all original rows, for modal
+                buckets,
+                rateGroupNames: Array.isArray(p.rateGroupNames) ? [...p.rateGroupNames] : [],
+                _raw: [p],
             });
+        } else {
+            // Duplicate desc (shouldn't happen with the new query, but handle safely)
+            const group = map.get(key);
+            if (Number(p.activationFee) > Number(group.activationFee)) {
+                group.activationFee = p.activationFee;
+            }
+            if (Array.isArray(p.rateGroupNames)) {
+                p.rateGroupNames.forEach(function (name) {
+                    if (name && !group.rateGroupNames.includes(name)) group.rateGroupNames.push(name);
+                });
+            }
+            group._raw.push(p);
         }
-        const group = map.get(key);
-        // Keep the highest activationFee as the representative price
-        if (Number(p.activationFee) > Number(group.activationFee)) {
-            group.activationFee = p.activationFee;
-        }
-        group.buckets.push({ balanceCategory: p.balanceCategory, bucketUnitValue: p.bucketUnitValue });
-        // Merge rateGroupNames, deduplicating across rows of the same group
-        if (Array.isArray(p.rateGroupNames)) {
-            p.rateGroupNames.forEach(function (name) {
-                if (name && !group.rateGroupNames.includes(name)) group.rateGroupNames.push(name);
-            });
-        }
-        group._raw.push(p);
-    });
-
-    // Sort buckets within each group: VOICE → SMS → DATA → others
-    map.forEach(group => {
-        group.buckets.sort((a, b) => {
-            const ai = _CAT_ORDER.indexOf(a.balanceCategory);
-            const bi = _CAT_ORDER.indexOf(b.balanceCategory);
-            return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-        });
     });
 
     return Array.from(map.values());
@@ -2110,25 +2012,28 @@ function _applyTpSearch(query) {
 
     const q = query.trim().toLowerCase();
 
-    // 1. Text search filter on the flat list
+    // 1. Text search filter — include benefit columns in search scope
     let flatFiltered = q
         ? _allTpPlans.filter(p => {
-            const fee = String(p.activationFee ?? '');
-            const cat = (p.balanceCategory || '').toLowerCase();
+            const fee  = String(p.activationFee ?? '');
             const desc = (p.tariffPackageDesc || '').toLowerCase();
-            return fee.includes(q) || cat.includes(q) || desc.includes(q);
+            const data = (p.dataBenefit  || '').toLowerCase();
+            const sms  = (p.smsBenefit   || '').toLowerCase();
+            const voice= (p.voiceBenefit || '').toLowerCase();
+            return fee.includes(q) || desc.includes(q) ||
+                   data.includes(q) || sms.includes(q) || voice.includes(q);
         })
         : _allTpPlans;
 
-    // 2. Category filter — keep only rows that have the selected balanceCategory
+    // 2. Category filter — check the flat benefit columns from the new query
     if (_tpFilter.category && _tpFilter.category !== 'ALL') {
         const cat = _tpFilter.category.toUpperCase();
-        // keep only groups that contain at least one row with this category
-        const matchingDescs = new Set(
-            flatFiltered.filter(p => (p.balanceCategory || '').toUpperCase() === cat)
-                .map(p => p.tariffPackageDesc)
-        );
-        flatFiltered = flatFiltered.filter(p => matchingDescs.has(p.tariffPackageDesc));
+        flatFiltered = flatFiltered.filter(p => {
+            if (cat === 'DATA')  return !!p.dataBenefit;
+            if (cat === 'SMS')   return !!p.smsBenefit;
+            if (cat === 'VOICE') return !!p.voiceBenefit;
+            return true;
+        });
     }
 
     // 3. Group
@@ -2167,15 +2072,16 @@ function _applyTpSearch(query) {
             <span class="tp-price-period">/m+GST</span>
         `;
 
-        // Build one column per bucket (VOICE | SMS | DATA …)
+        // Build benefit chips: one per non-null bucket (VOICE | SMS | DATA)
         const bucketsHtml = group.buckets.map(b => {
             const icon = _CAT_ICON[b.balanceCategory] || '📦';
-            const val = b.bucketUnitValue || '-';
-            const cat = b.balanceCategory || '';
+            const val  = b.bucketUnitValue || '-';
+            const cat  = b.balanceCategory || '';
+            const mod  = cat.toLowerCase(); // 'voice' | 'sms' | 'data'
             return `
-                <div class="tp-meta-col">
+                <div class="tp-meta-col tp-meta-col--${mod}">
                     <span class="tp-meta-val">${val}</span>
-                    <span class="tp-meta-key">${cat}</span>
+                    <span class="tp-meta-key">${icon} ${cat}</span>
                 </div>`;
         }).join('<div class="tp-meta-sep"></div>');
 
@@ -2212,7 +2118,7 @@ function _applyTpSearch(query) {
 
                 <button
                     class="tp-btn-select"
-                    onclick="event.stopPropagation();openCloneTree('${encodeURIComponent(group.tariffPackageDesc)}', ${group._raw[0]?.tariff_package_id || 'null'})"
+                    onclick="event.stopPropagation();openCloneTree('${encodeURIComponent(group.tariffPackageDesc)}', ${group.tariff_package_id || group._raw[0]?.tariff_package_id || 'null'})"
                 >
                     Select
                 </button>
@@ -2385,11 +2291,15 @@ async function _cloneTreeAction(action) {
     if (action === 'clone') {
         const payload = _currentClonePayload;
 
-        console.log("CLONE PAYLOAD:", JSON.stringify(payload, null, 2));
-
         if (payload == null) {
             alert('Plan data not available. Please close and try again.');
             return;
+        }
+
+        // Inject username from sessionStorage (handles old DB records where createdBy is null)
+        payload.username = sessionStorage.getItem('username') || (typeof USERNAME !== 'undefined' ? USERNAME : '');
+        if (payload.data) {
+            payload.data.username = payload.username;
         }
 
         // Disable button to prevent double-submit
@@ -2412,6 +2322,7 @@ async function _cloneTreeAction(action) {
 
             alert('✅ Cloned successfully!\nNew plan: ' + result.clonedTpName);
             closeCloneTree();
+            await _loadAndRenderTpCards();
 
         } catch (err) {
             console.error('Clone error:', err);
@@ -2484,7 +2395,7 @@ async function _cloneTreeAction(action) {
         // Store original tpName and networkId for the clone POST
         sessionStorage.setItem('cloneTpName', payload.tpName || d.tariffPackageDesc || '');
         sessionStorage.setItem('cloneNetworkId', String(payload.networkId || ''));
-        sessionStorage.setItem('cloneUsername', payload.username || '');
+        // username is read from sessionStorage directly in step5 — no need to re-store it
 
         closeCloneTree();
         window.isInternalNavigation = true;
